@@ -9,3 +9,7 @@ Just want to create a game engine of my own, that's all
   
   Basic rendering without D3D(just a black window..);
   You can press 'ESC' to close the window;
+  
+2014/1/9:
+  1.Render with D3D;
+  2.Create&Write some simple message to a .txt file;
