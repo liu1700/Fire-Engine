@@ -60,6 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="d3d11.lib d3dx11.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -171,10 +172,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\d3dclass.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\FireMain.cpp"
 				>
 			</File>
@@ -196,14 +193,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\d3dclass.h"
-				>
-			</File>
-			<File
-				RelativePath=".\fileIO.h"
-				>
-			</File>
 			<File
 				RelativePath=".\graphicsclass.h"
 				>
