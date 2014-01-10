@@ -12,4 +12,8 @@ Just want to create a game engine of my own, that's all
   
 2014/1/9:
   1.Render with D3D;
-  2.Create&Write some simple message to a .txt file;
+  2.Create&Write some simple messages to a .txt file;
+  
+2014/1/10:
+  1.Render a simple colored polygon with shader;
+  2.Little change in fileIO
