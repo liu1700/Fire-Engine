@@ -31,35 +31,4 @@ private:
 };
 
 
-
-FileIOClass::FileIOClass()
-{
-
-}
-
-FileIOClass::FileIOClass(const FileIOClass& other)
-{
-
-}
-
-FileIOClass::~FileIOClass()
-{
-
-}
-
-void FileIOClass::WriteTextFile(const wchar_t* filepath, const char* texts)
-{
-	m_file.open(filepath, ios::app);
-	m_file<<texts<<"\n"<<endl;
-	m_file.close();
-}
-
-void FileIOClass::WriteTextFile(const wchar_t* filepath, int texts)
-{
-	m_file.open(filepath, ios::app);
-	m_file<<texts<<"\n"<<endl;
-	m_file.close();
-}
-
-
 #endif

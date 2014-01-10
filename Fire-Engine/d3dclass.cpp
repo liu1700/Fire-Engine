@@ -3,6 +3,7 @@
 //文件名: d3dclass.cpp		日期: 创建于:2014/1/9
 //////////////////////////////////////////////////////////
 #include "d3dclass.h"
+#include "fileIO.h"
 
 D3DClass::D3DClass()
 {
@@ -298,6 +299,17 @@ bool D3DClass::Initialze(int screenWidth, int screenHeight, bool vsync, HWND hwn
 
 	// 为2D渲染创建正交矩阵
 	D3DXMatrixOrthoLH(&m_orthoMatrix, (float)screenWidth, (float)screenHeight, screenNear, screenDepth);
+
+	// 获取显卡信息并输出到文本文件中
+	char videoCardName[128];
+	int videoMenmory;
+	FileIOClass* writeCardName;
+
+	GetVideoCardInfo(videoCardName, videoMenmory);
+
+	writeCardName = new FileIOClass;
+	writeCardName->WriteTextFile(L"VideoCardInfo.txt", videoCardName);
+	writeCardName->WriteTextFile(L"VideoCardInfo.txt", videoMenmory);
 
 	return true;
 }

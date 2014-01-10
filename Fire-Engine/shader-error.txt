@@ -1,0 +1,12 @@
+d:\MyProjects\C_C++\Fire-Engine\Fire-Engine\color.ps(18,39): error X3000: syntax error: unexpected token ')'
+
+
+d:\MyProjects\C_C++\Fire-Engine\Fire-Engine\color.ps(18,49): error X4502: invalid vs_5_0 output semantic 'SV_TARGET'
+
+
+d:\MyProjects\C_C++\Fire-Engine\Fire-Engine\color.ps(18,47): error X4502: invalid vs_5_0 output semantic 'SV_TARGET'
+
+
+d:\MyProjects\C_C++\Fire-Engine\Fire-Engine\color.ps(18,49): error X4502: invalid vs_5_0 output semantic 'SV_TARGET'
+
+
