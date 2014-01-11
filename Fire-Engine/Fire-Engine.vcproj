@@ -175,10 +175,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\colorshaderclass.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\d3dclass.cpp"
 				>
 			</File>
@@ -199,11 +195,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\lightclass.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\lightshaderclass.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\modelclass.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\systemclass.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\textureclass.cpp"
 				>
 			</File>
 		</Filter>
@@ -214,10 +222,6 @@
 			>
 			<File
 				RelativePath=".\cameraclass.h"
-				>
-			</File>
-			<File
-				RelativePath=".\colorshaderclass.h"
 				>
 			</File>
 			<File
@@ -237,11 +241,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\lightclass.h"
+				>
+			</File>
+			<File
+				RelativePath=".\lightshaderclass.h"
+				>
+			</File>
+			<File
 				RelativePath=".\modelclass.h"
 				>
 			</File>
 			<File
 				RelativePath=".\systemclass.h"
+				>
+			</File>
+			<File
+				RelativePath=".\textureclass.h"
 				>
 			</File>
 		</Filter>
@@ -255,11 +271,11 @@
 			Name="Shaders"
 			>
 			<File
-				RelativePath=".\color.ps"
+				RelativePath=".\Light.ps"
 				>
 			</File>
 			<File
-				RelativePath=".\color.vs"
+				RelativePath=".\Light.vs"
 				>
 			</File>
 		</Filter>

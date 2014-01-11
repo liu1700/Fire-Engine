@@ -16,7 +16,7 @@
 #include <Windows.h>
 
 ///////////////////
-//CLASS INCLUDES
+//FE CLASS INCLUDES
 ///////////////////
 #include "inputclass.h"
 #include "graphicsclass.h"

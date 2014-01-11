@@ -1,48 +1,51 @@
 
 //////////////////////////////////////////////////////////
-//文件名: colorshaderclass.cpp		日期: 创建于:2014/1/10
+//文件名: lightshaderclass.cpp		日期: 创建于:2014/1/11 //
 //////////////////////////////////////////////////////////
-#include "colorshaderclass.h"
+#include "lightshaderclass.h"
 #include "fileIO.h"
 
-ColorShaderClass::ColorShaderClass()
+LightShaderClass::LightShaderClass()
 {
 	m_vertexShader = NULL;
 	m_pixelShader = NULL;
 	m_matrixBuffer = NULL;
 	m_layout = NULL;
+	m_sampleState = NULL;
+	m_lightBuffer = NULL;
 }
 
-ColorShaderClass::ColorShaderClass(const ColorShaderClass& other)
+LightShaderClass::LightShaderClass(const LightShaderClass& other)
 {
 
 }
 
-ColorShaderClass::~ColorShaderClass()
+LightShaderClass::~LightShaderClass()
 {
 	
 }
 
-bool ColorShaderClass::Initialze(ID3D11Device* device, HWND hwnd)
+bool LightShaderClass::Initialze(ID3D11Device* device, HWND hwnd)
 {
 	// 初始化shader
-	if(!InitialzeShader(device, hwnd, L"../Fire-Engine/color.vs", L"../Fire-Engine/color.ps"))
+	if(!InitialzeShader(device, hwnd, L"../Fire-Engine/light.vs", L"../Fire-Engine/light.ps"))
 		return false;
 
 	return true;
 }
 
-void ColorShaderClass::ShutDown()
+void LightShaderClass::ShutDown()
 {
 	ShutdownShader();
 
 	return;
 }
 
-bool ColorShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, 
-							  D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix)
+bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, 
+							  D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix,
+							  ID3D11ShaderResourceView* texture, D3DXVECTOR3 lightDirection, D3DXVECTOR4 diffuseColor)
 {
-	if(!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix))
+	if(!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, diffuseColor))
 		return false;
 	
 	// 开始渲染
@@ -51,14 +54,16 @@ bool ColorShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount
 	return true;
 }
 
-bool ColorShaderClass::InitialzeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
+bool LightShaderClass::InitialzeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
 {
 	ID3D10Blob* errorMessage;
 	ID3D10Blob* vertexShaderBuffer;
 	ID3D10Blob* pixelShaderBuffer;
-	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
+	D3D11_INPUT_ELEMENT_DESC polygonLayout[3];
 	unsigned int numElements;
 	D3D11_BUFFER_DESC matrixBufferDesc;
+	D3D11_BUFFER_DESC lightBufferDesc;
+	D3D11_SAMPLER_DESC samplerDesc;
 
 	// 初始化指针为null
 	errorMessage = NULL;
@@ -66,7 +71,7 @@ bool ColorShaderClass::InitialzeShader(ID3D11Device* device, HWND hwnd, WCHAR* v
 	pixelShaderBuffer = NULL;
 
 	// 编译Shader
-	if (FAILED(D3DX11CompileFromFile(vsFilename, NULL, NULL, "ColorVertexShader", "vs_5_0",
+	if (FAILED(D3DX11CompileFromFile(vsFilename, NULL, NULL, "LightVertexShader", "vs_5_0",
 		D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, &vertexShaderBuffer, &errorMessage, NULL)))
 	{
 		if (errorMessage)
@@ -81,7 +86,7 @@ bool ColorShaderClass::InitialzeShader(ID3D11Device* device, HWND hwnd, WCHAR* v
 		return false;
 	}
 
-	if (FAILED(D3DX11CompileFromFile(psFilename, NULL, NULL, "ColorPixelShader", "ps_5_0",
+	if (FAILED(D3DX11CompileFromFile(psFilename, NULL, NULL, "LightPixelShader", "ps_5_0",
 		D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, &pixelShaderBuffer, &errorMessage, NULL)))
 	{
 		if (errorMessage)
@@ -112,13 +117,21 @@ bool ColorShaderClass::InitialzeShader(ID3D11Device* device, HWND hwnd, WCHAR* v
 	polygonLayout[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	polygonLayout[0].InstanceDataStepRate = 0;
 
-	polygonLayout[1].SemanticName = "COLOR";
+	polygonLayout[1].SemanticName = "TEXCOORD";
 	polygonLayout[1].SemanticIndex = 0;
-	polygonLayout[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	polygonLayout[1].Format = DXGI_FORMAT_R32G32_FLOAT;
 	polygonLayout[1].InputSlot = 0;
 	polygonLayout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 	polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	polygonLayout[1].InstanceDataStepRate = 0;
+
+	polygonLayout[2].SemanticName = "NORMAL";
+	polygonLayout[2].SemanticIndex = 0;
+	polygonLayout[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	polygonLayout[2].InputSlot = 0;
+	polygonLayout[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+	polygonLayout[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+	polygonLayout[2].InstanceDataStepRate = 0;
 
 	// 得到布局中元素的数量
 	numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
@@ -145,11 +158,42 @@ bool ColorShaderClass::InitialzeShader(ID3D11Device* device, HWND hwnd, WCHAR* v
 	if(FAILED(device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer)))
 		return false;
 
+	// 设定纹理抽象描述
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.MipLODBias = 0.0f;
+	samplerDesc.MaxAnisotropy = 1;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	// 创建纹理抽取状态
+	if(FAILED(device->CreateSamplerState(&samplerDesc, &m_sampleState)))
+		return false;
+
+	// 设置动态光照的描述信息
+	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
+	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightBufferDesc.MiscFlags = 0;
+	lightBufferDesc.StructureByteStride = 0;
+
+	// 创建光照缓存
+	if(FAILED(device->CreateBuffer(&lightBufferDesc, NULL, &m_lightBuffer)))
+		return false;
+
 	return true;
 
 }
 
-void ColorShaderClass::ShutdownShader()
+void LightShaderClass::ShutdownShader()
 {
 	if (m_matrixBuffer)
 	{
@@ -171,11 +215,21 @@ void ColorShaderClass::ShutdownShader()
 		m_vertexShader->Release();
 		m_vertexShader = NULL;
 	}
+	if (m_sampleState)
+	{
+		m_sampleState->Release();
+		m_sampleState = NULL;
+	}
+	if (m_lightBuffer)
+	{
+		m_lightBuffer->Release();
+		m_lightBuffer = NULL;
+	}
 
 	return;
 }
 
-void ColorShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
+void LightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
 {
 	FileIOClass* compileErrors;
 
@@ -195,11 +249,13 @@ void ColorShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND h
 	return;
 }
 
-bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 
-										   D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix)
+bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 
+										   D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix,
+										   ID3D11ShaderResourceView* texture, D3DXVECTOR3 lightDirection, D3DXVECTOR4 diffuseColor)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
+	LightBufferType* dataPtr2;
 	unsigned int bufferNumber;
 
 	// 将矩阵转置为shader做准备
@@ -226,10 +282,32 @@ bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, D
 	bufferNumber = 0;
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
 
+	// 设定纹理资源
+	deviceContext->PSSetShaderResources(0, 1, &texture);
+
+	// 锁定光照缓冲区，使其可写
+	if(FAILED(deviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, 
+		&mappedResource)))
+		return false;
+
+	// 获取矩阵缓冲的指针
+	dataPtr2 = (LightBufferType*)mappedResource.pData;
+
+	// 将转置后的矩阵写入data
+	dataPtr2->diffuseColor = diffuseColor;
+	dataPtr2->lightDirection = lightDirection;
+	dataPtr2->padding = 0.0f;
+
+	// 解锁
+	deviceContext->Unmap(m_lightBuffer, 0);
+
+	bufferNumber = 0;
+	deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_lightBuffer);
+
 	return true;
 }
 
-void ColorShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
 	// 设定顶点输入布局
 	deviceContext->IASetInputLayout(m_layout);
@@ -237,6 +315,9 @@ void ColorShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int inde
 	// 设定vertex与pixel shader
 	deviceContext->VSSetShader(m_vertexShader, NULL, 0);
 	deviceContext->PSSetShader(m_pixelShader, NULL, 0);
+
+	// 在pixel shader中设定抽样状态
+	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
 
 	// 渲染图形
 	deviceContext->DrawIndexed(indexCount, 0, 0);

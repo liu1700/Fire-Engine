@@ -23,11 +23,16 @@ public:
 	FileIOClass(const FileIOClass&);
 	~FileIOClass();
 
-	void WriteTextFile(const wchar_t* filepath, const char* texts);
-	void WriteTextFile(const wchar_t* filepath, int texts);
+public:
+	void WriteTextFile(const wchar_t*, const char*);
+	void WriteTextFile(const wchar_t*, int);
+
+public:
+	float** LoadModelFromFile(const wchar_t*, int&, int&);
 
 private:
-	ofstream m_file;
+	ofstream m_textFile;
+
 };
 
 

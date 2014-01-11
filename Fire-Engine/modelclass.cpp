@@ -8,6 +8,8 @@ ModelClass::ModelClass()
 {
 	m_vertexBuffer = NULL;
 	m_indexBuffer = NULL;
+	m_Texture = NULL;
+	m_Model = NULL;
 }
 
 ModelClass::ModelClass(const ModelClass& other)
@@ -20,10 +22,18 @@ ModelClass::~ModelClass()
 
 }
 
-bool ModelClass::Initialze(ID3D11Device* device)
+bool ModelClass::Initialze(ID3D11Device* device, WCHAR* textureFilename, WCHAR* modelFilename)
 {
+	// 加载模型数据
+	if((m_ModelInfo = m_Model->LoadModelFromFile(modelFilename, m_vertexCount, m_indexCount)) == NULL)
+		return false;
+	
 	// 初始化顶点与索引缓存
 	if(!InitialzeBuffers(device))
+		return false;
+
+	// 为模型加载纹理
+	if(!LoadTexture(device, textureFilename))
 		return false;
 
 	return true;
@@ -31,6 +41,8 @@ bool ModelClass::Initialze(ID3D11Device* device)
 
 void ModelClass::ShutDown()
 {
+	ReleaseTexture();
+
 	ShutdownBuffers();
 
 	return;
@@ -50,6 +62,11 @@ int ModelClass::GetIndexCount()
 	return m_indexCount;
 }
 
+ID3D11ShaderResourceView* ModelClass::GetTexture()
+{
+	return m_Texture->GetTexture();
+}
+
 bool ModelClass::InitialzeBuffers(ID3D11Device* device)
 {
 	VertexType* vertices;
@@ -57,9 +74,9 @@ bool ModelClass::InitialzeBuffers(ID3D11Device* device)
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 
-	//  两个数组分别设定三个顶点与三个索引
-	m_vertexCount = 6;
-	m_indexCount = 6;
+	////  两个数组分别设定三个顶点与三个索引
+	//m_vertexCount = 6;
+	//m_indexCount = 6;
 
 	vertices = new VertexType[m_vertexCount];
 	indices = new unsigned long[m_indexCount];
@@ -69,31 +86,46 @@ bool ModelClass::InitialzeBuffers(ID3D11Device* device)
 
 	// 顺时针填充点，会被认为是正面，逆时针被认为反面，填充点的顺序很重要
 
-	vertices[0].position = D3DXVECTOR3(-1.0f, -1.0f, 0.0f);
-	vertices[0].color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.7f);
+	for (int i = 0; i < m_vertexCount; i++)
+	{
+		vertices[i].position = D3DXVECTOR3(m_ModelInfo[i][0], m_ModelInfo[i][1], m_ModelInfo[i][2]);
+		vertices[i].texture = D3DXVECTOR2(m_ModelInfo[i][3], m_ModelInfo[i][4]);
+		vertices[i].normal = D3DXVECTOR3(m_ModelInfo[i][5], m_ModelInfo[i][6], m_ModelInfo[i][7]);
 
-	vertices[1].position = D3DXVECTOR3(-1.0f, 1.0f, 0.0f);
-	vertices[1].color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.7f);
+		indices[i] = i;
+	}
 
-	vertices[2].position = D3DXVECTOR3(1.0f, 1.0f, 0.0f);
-	vertices[2].color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.7f);
+	//vertices[0].position = D3DXVECTOR3(-1.0f, -1.0f, 0.0f);
+	//vertices[0].texture = D3DXVECTOR2(0.0f, 1.0f);
+	//vertices[0].normal = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
 
-	vertices[3].position = D3DXVECTOR3(1.0f, 1.0f, 0.0f);
-	vertices[3].color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.7f);
+	//vertices[1].position = D3DXVECTOR3(-1.0f, 1.0f, 0.0f);
+	//vertices[1].texture = D3DXVECTOR2(0.0f, 0.0f);
+	//vertices[1].normal = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
 
-	vertices[4].position = D3DXVECTOR3(1.0f, -1.0f, 0.0f);
-	vertices[4].color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.7f);
+	//vertices[2].position = D3DXVECTOR3(1.0f, 1.0f, 0.0f);
+	//vertices[2].texture = D3DXVECTOR2(1.0f, 0.0f);
+	//vertices[2].normal = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
 
-	vertices[5].position = D3DXVECTOR3(-1.0f, -1.0f, 0.0f);
-	vertices[5].color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.7f);
+	//vertices[3].position = D3DXVECTOR3(1.0f, 1.0f, 0.0f);
+	//vertices[3].texture = D3DXVECTOR2(1.0f, 0.0f);
+	//vertices[3].normal = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
 
-	// 索引
-	indices[0] = 0;
-	indices[1] = 1;
-	indices[2] = 2;
-	indices[3] = 3;
-	indices[4] = 4;
-	indices[5] = 5;
+	//vertices[4].position = D3DXVECTOR3(1.0f, -1.0f, 0.0f);
+	//vertices[4].texture = D3DXVECTOR2(1.0f, 1.0f);
+	//vertices[4].normal = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+
+	//vertices[5].position = D3DXVECTOR3(-1.0f, -1.0f, 0.0f);
+	//vertices[5].texture = D3DXVECTOR2(0.0f, 1.0f);
+	//vertices[5].normal = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+
+	//// 索引
+	//indices[0] = 0;
+	//indices[1] = 1;
+	//indices[2] = 2;
+	//indices[3] = 3;
+	//indices[4] = 4;
+	//indices[5] = 5;
 
 	// 设置静态顶点缓冲的信息
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -173,5 +205,28 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	// 设定这种顶点缓存所绘制的图元
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	return;
+}
+
+bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename)
+{
+	m_Texture = new TextureClass;
+	if(!m_Texture)
+		return false;
+
+	if(!m_Texture->Initialze(device, filename))
+		return false;
+
+	return true;
+}
+
+void ModelClass::ReleaseTexture()
+{
+	if (m_Texture)
+	{
+		m_Texture->ShutDown();
+		delete m_Texture;
+		m_Texture = NULL;
+	}
 	return;
 }

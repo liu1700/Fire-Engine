@@ -6,14 +6,15 @@
 #define _GRAPHICSCLASS_H_
 
 //////////////
-//INCLUDES
+//FE CLASS INCLUDES //
 //////////////
 
 //#include <Windows.h>
 #include "d3dclass.h"
 #include "cameraclass.h"
 #include "modelclass.h"
-#include "colorshaderclass.h"
+#include "lightshaderclass.h"
+#include "lightclass.h"
 
 //////////////
 //GLOBALS
@@ -38,13 +39,14 @@ public:
 	bool Frame();
 
 private:
-	bool Render();
+	bool Render(float);
 
 private:
 	D3DClass* m_D3D;
 	CameraClass* m_Camera;
 	ModelClass* m_Model;
-	ColorShaderClass* m_ColorShader;
+	LightShaderClass* m_LightShader;
+	LightClass* m_Light;
 
 };
 

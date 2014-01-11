@@ -1,0 +1,55 @@
+
+//////////////////////////////////////////////////////////
+//文件名: Texture.ps		日期: 创建于:2014/1/11
+//////////////////////////////////////////////////////////
+
+////////
+// GLOBALS //
+////////
+Texture2D shaderTexture;
+SamplerState SampleType;
+
+cbuffer LightBuffer
+{
+	float4 diffuseColor;
+	float3 lightDirection;
+	float padding;
+};
+
+////////
+// TYPEDEFS //
+////////
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float2 tex : TEXCOORD0;
+	float3 normal : NORMAL;
+};
+
+//////////////////////////////////////
+// Pixel Shader
+//////////////////////////////////////
+float4 LightPixelShader(PixelInputType input) : SV_TARGET
+{
+	float4 textureColor;
+	float3 lightDir;
+	float lightIntensity;
+	float4 color;
+	
+	// 获取纹理的采样与插取后所得到的颜色
+	textureColor = shaderTexture.Sample(SampleType, input.tex);
+	
+	// 反转光线方向为计算使用
+	lightDir = -lightDirection;
+	
+	// 计算每个像素上的光强值,饱和处理
+	lightIntensity = saturate(dot(input.normal, lightDir));
+	
+	// 算出光照强度
+	color = saturate(diffuseColor * lightIntensity);
+	
+	// 将光强与纹理颜色混合算出最后的颜色
+	color = color * textureColor;
+	
+	return color;
+}
