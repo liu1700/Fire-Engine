@@ -171,6 +171,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\bitmapclass.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\cameraclass.cpp"
 				>
 			</File>
@@ -211,7 +215,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\textclass.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\textureclass.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\textureshaderclass.cpp"
 				>
 			</File>
 		</Filter>
@@ -220,6 +232,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\bitmapclass.h"
+				>
+			</File>
 			<File
 				RelativePath=".\cameraclass.h"
 				>
@@ -257,7 +273,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\textclass.h"
+				>
+			</File>
+			<File
 				RelativePath=".\textureclass.h"
+				>
+			</File>
+			<File
+				RelativePath=".\textureshaderclass.h"
 				>
 			</File>
 		</Filter>
@@ -276,6 +300,14 @@
 			</File>
 			<File
 				RelativePath=".\Light.vs"
+				>
+			</File>
+			<File
+				RelativePath=".\Textures.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\Textures.vs"
 				>
 			</File>
 		</Filter>

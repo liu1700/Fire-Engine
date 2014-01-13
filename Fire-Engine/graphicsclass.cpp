@@ -11,6 +11,9 @@ GraphicsClass::GraphicsClass()
 	m_Model = NULL;
 	m_LightShader = NULL;
 	m_Light = NULL;
+	m_Bitmap = NULL;
+	m_TextureShader = NULL;
+	m_Text = NULL;
 }
 
 GraphicsClass::GraphicsClass(const GraphicsClass& other)
@@ -25,6 +28,7 @@ GraphicsClass::~GraphicsClass()
 
 bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 {
+	D3DXMATRIX baseViewMatrix;
 
 	// 创建D3D对象
 	m_D3D = new D3DClass;
@@ -44,7 +48,19 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 
 	// 设定Camera的位置
-	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
+	m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
+	m_Camera->Render();
+	m_Camera->GetViewMatrix(baseViewMatrix);
+
+	m_Text = new TextClass;
+	if(!m_Text)
+		return false;
+
+	if(!m_Text->Initialze(m_D3D->GetDevice(), m_D3D->GetDeviceContext()))
+	{
+		MessageBox(hwnd, L"无法初始化text",L"Error",MB_OK);
+		return false;
+	}
 
 	// 创建model对象
 	m_Model = new ModelClass;
@@ -58,7 +74,7 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	// 创建shader对象
+	// 创建Lightshader对象
 	m_LightShader = new LightShaderClass;
 	if(!m_LightShader)
 		return false;
@@ -66,7 +82,31 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 	// 初始化shader
 	if(!m_LightShader->Initialze(m_D3D->GetDevice(), hwnd))
 	{
-		MessageBox(hwnd, L"初始化Shader对象错误", L"Error", MB_OK);
+		MessageBox(hwnd, L"初始化LightShader对象错误", L"Error", MB_OK);
+		return false;
+	}
+
+	// 创建Textureshader对象
+	m_TextureShader = new TextureShaderClass;
+	if(!m_TextureShader)
+		return false;
+
+	// 初始化shader
+	if(!m_TextureShader->Initialize(m_D3D->GetDevice(), hwnd))
+	{
+		MessageBox(hwnd, L"初始化TextureShader对象错误", L"Error", MB_OK);
+		return false;
+	}
+
+	// 创建2D图像对象
+	m_Bitmap = new BitmapClass;
+	if(!m_Bitmap)
+		return false;
+
+	// 初始化bitmap
+	if(!m_Bitmap->Initialze(m_D3D->GetDevice(), screenWidth, screenHeight, L"../Fire-Engine/Textures/test.dds", 256,256))
+	{
+		MessageBox(hwnd, L"无法初始化bitmap对象", L"Error", MB_OK);
 		return false;
 	}
 
@@ -76,19 +116,44 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 
 	// 初始化光照对象
+	m_Light->SetAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
+	m_Light->SetDirection(1.0f, 0.0f, 1.0f);
+	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Light->SetSpecularPower(32.0f);
 
 	return true;
 }
 
 void GraphicsClass::Shutdown()
 {
+	if (m_Text)
+	{
+		m_Text->ShutDown();
+		delete m_Text;
+		m_Text = NULL;
+	}
+
+	if (m_TextureShader)
+	{
+		m_TextureShader->Shutdown();
+		delete m_TextureShader;
+		m_TextureShader = NULL;
+	}
+
+	if (m_Bitmap)
+	{
+		m_Bitmap->ShutDown();
+		delete m_Bitmap;
+		m_Bitmap = NULL;
+	}
+
 	if (m_Model)
 	{
 		delete m_Model;
 		m_Model = NULL;
 	}
+
 	if (m_Light)
 	{
 		delete m_Light;
@@ -130,7 +195,7 @@ bool GraphicsClass::Frame()
 	static float rotation = 0.0f;
 
 	//  每帧更新旋转
-	rotation += (float)D3DX_PI * 0.01f;
+	rotation += (float)D3DX_PI * 0.005f;
 	if (rotation > 360.0f)
 	{
 		rotation -= 360.0f;
@@ -144,7 +209,7 @@ bool GraphicsClass::Frame()
 
 bool GraphicsClass::Render(float rotation)
 {
-	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix;
+	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix;
 
 	// BackBuffer清除为灰色
 	m_D3D->BeginScene(0.7f, 0.7f, 0.7f, 1.0f);
@@ -157,6 +222,32 @@ bool GraphicsClass::Render(float rotation)
 	m_D3D->GetWorldMatrix(worldMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
 
+	// 获取正交矩阵
+	m_D3D->GetOrthoMatrix(orthoMatrix);
+
+	// 关闭Z buffer
+	m_D3D->TurnZBufferOff();
+	// 开启透明混合
+	m_D3D->TurnOnAlphaBlending();
+
+	// 渲染text
+	if(!m_Text->Render(m_D3D->GetDeviceContext(), L"OK", 200, 400))
+		return false;
+
+	m_D3D->TurnOffAlphaBlending();
+	
+	// 将Bitmap的vertex与index buffer 放到图形绘制管线上
+	if(!m_Bitmap->Render(m_D3D->GetDeviceContext(), 1, 1))
+		return false;
+
+	 //渲染Bitmap
+	if(!m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), 
+		worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture()))
+		return false;
+
+	// 开启Z buffer
+	m_D3D->TurnZBufferOn();
+
 	// 旋转世界矩阵
 	D3DXMatrixRotationY(&worldMatrix, rotation);
 
@@ -165,7 +256,8 @@ bool GraphicsClass::Render(float rotation)
 
 	// 利用shader渲染model
 	if(!m_LightShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(),
-		worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetDiffuseColor()))
+		worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower()))
 		return false;
 
 	// 呈现

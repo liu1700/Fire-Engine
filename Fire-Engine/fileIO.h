@@ -24,14 +24,12 @@ public:
 	~FileIOClass();
 
 public:
-	void WriteTextFile(const wchar_t*, const char*);
+	void WriteTextFile(const wchar_t*, char*);
 	void WriteTextFile(const wchar_t*, int);
 
 public:
 	float** LoadModelFromFile(const wchar_t*, int&, int&);
-
-private:
-	ofstream m_textFile;
+	float** LoadFontDataFromFile(const wchar_t*);
 
 };
 

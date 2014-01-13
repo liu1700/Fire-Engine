@@ -8,13 +8,14 @@
 //////////////
 //FE CLASS INCLUDES //
 //////////////
-
-//#include <Windows.h>
 #include "d3dclass.h"
 #include "cameraclass.h"
 #include "modelclass.h"
 #include "lightshaderclass.h"
 #include "lightclass.h"
+#include "bitmapclass.h"
+#include "textureshaderclass.h"
+#include "textclass.h"
 
 //////////////
 //GLOBALS
@@ -46,7 +47,10 @@ private:
 	CameraClass* m_Camera;
 	ModelClass* m_Model;
 	LightShaderClass* m_LightShader;
+	TextureShaderClass* m_TextureShader;
 	LightClass* m_Light;
+	BitmapClass* m_Bitmap;
+	TextClass* m_Text;
 
 };
 

@@ -19,8 +19,10 @@ FileIOClass::~FileIOClass()
 
 }
 
-void FileIOClass::WriteTextFile(const wchar_t* filepath, const char* texts)
+void FileIOClass::WriteTextFile(const wchar_t* filepath, char* texts)
 {
+	ofstream m_textFile;
+
 	m_textFile.open(filepath, ios::app);
 	if(m_textFile.fail())
 		return;
@@ -31,6 +33,8 @@ void FileIOClass::WriteTextFile(const wchar_t* filepath, const char* texts)
 
 void FileIOClass::WriteTextFile(const wchar_t* filepath, int texts)
 {
+	ofstream m_textFile;
+
 	m_textFile.open(filepath, ios::app);
 	if(m_textFile.fail())
 		return;
@@ -61,13 +65,14 @@ float** FileIOClass::LoadModelFromFile(const wchar_t* filepath, int& vertexcount
 
 	// 准备读入模型信息,申请内存
 	modelInfo  = new float*[vertexcount];
+	if(!modelInfo)
+		return NULL;
 	for (int i = 0; i < vertexcount; i++)
 	{
 		modelInfo[i] = new float[8];
+		if(!modelInfo)
+			return NULL;
 	}
-
-	if(!modelInfo)
-		return NULL;
 
 	// 开始读到文件头
 	inModelFile.get(input);
@@ -89,5 +94,53 @@ float** FileIOClass::LoadModelFromFile(const wchar_t* filepath, int& vertexcount
 	inModelFile.close();
 
 	return modelInfo;
+
+}
+
+float** FileIOClass::LoadFontDataFromFile(const wchar_t* filepath)
+{
+	ifstream inFontFile;
+	float** fontInfo = NULL;
+	char temp;
+
+	inFontFile.open(filepath);
+	if(inFontFile.fail())
+		return NULL;
+
+	// 准备读入字体信息,申请内存
+	fontInfo  = new float*[95];
+	if(!fontInfo)
+		return NULL;
+
+	for (int i = 0; i < 95; i++)
+	{
+		fontInfo[i] = new float[3];
+		if(!fontInfo)
+			return NULL;
+	}	
+
+	for (int i = 0; i < 95; i++)
+	{
+		// 读入信息顺序为 left,right,size
+		inFontFile.get(temp);
+		while(temp!=' ')
+		{
+			inFontFile.get(temp);
+		}
+		inFontFile.get(temp);
+		while(temp!=' ')
+		{
+			inFontFile.get(temp);
+		}
+
+		inFontFile>>fontInfo[i][0];
+		inFontFile>>fontInfo[i][1];
+		inFontFile>>fontInfo[i][2];
+
+	}
+
+	inFontFile.close();
+
+	return fontInfo;
 
 }

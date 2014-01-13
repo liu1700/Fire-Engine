@@ -15,6 +15,10 @@ D3DClass::D3DClass()
 	m_depthStencilState = NULL;
 	m_depthStencilView = NULL;
 	m_rasterState = NULL;
+	m_depthDisabledStencilState = NULL;
+
+	m_alphaEnableBlendingState = NULL;
+	m_depthDisabledStencilState = NULL;
 }
 
 D3DClass::D3DClass(const D3DClass& other)
@@ -45,6 +49,9 @@ bool D3DClass::Initialze(int screenWidth, int screenHeight, bool vsync, HWND hwn
 	D3D11_RASTERIZER_DESC rasterDesc;
 	D3D11_VIEWPORT viewport;
 	float fieldOfView, screenAspect;
+	D3D11_DEPTH_STENCIL_DESC depthDisabledStencilDesc;
+
+	D3D11_BLEND_DESC blendStateDesc;
 
 	// 设置垂直同步
 	m_vsync_enabled = vsync;
@@ -300,6 +307,56 @@ bool D3DClass::Initialze(int screenWidth, int screenHeight, bool vsync, HWND hwn
 	// 为2D渲染创建正交矩阵
 	D3DXMatrixOrthoLH(&m_orthoMatrix, (float)screenWidth, (float)screenHeight, screenNear, screenDepth);
 
+	// 设置2D模板
+	// 分配内存
+	ZeroMemory(&depthDisabledStencilDesc, sizeof(depthDisabledStencilDesc));
+
+	// 设定深度状态
+	depthDisabledStencilDesc.DepthEnable = false;
+	depthDisabledStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthDisabledStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	depthDisabledStencilDesc.StencilEnable = true;
+	depthDisabledStencilDesc.StencilReadMask = 0xFF;
+	depthDisabledStencilDesc.StencilWriteMask = 0xFF;
+
+	// 像素在前面
+	depthDisabledStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthDisabledStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	depthDisabledStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthDisabledStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// 像素在后面
+	depthDisabledStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthDisabledStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	depthDisabledStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthDisabledStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// 创建深度模板
+	if(FAILED(m_device->CreateDepthStencilState(&depthDisabledStencilDesc, &m_depthDisabledStencilState)))
+		return false;
+	
+	// 初始化混合状态
+	ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
+
+	// 创建透明度混合信息
+	blendStateDesc.RenderTarget[0].BlendEnable		= TRUE;
+	blendStateDesc.RenderTarget[0].SrcBlend			= D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].DestBlend		= D3D11_BLEND_INV_SRC_ALPHA;
+	blendStateDesc.RenderTarget[0].BlendOp			= D3D11_BLEND_OP_ADD;
+	blendStateDesc.RenderTarget[0].SrcBlendAlpha	= D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].DestBlendAlpha	= D3D11_BLEND_ZERO;
+	blendStateDesc.RenderTarget[0].BlendOpAlpha		= D3D11_BLEND_OP_ADD;
+	blendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+
+	if(FAILED(m_device->CreateBlendState(&blendStateDesc, &m_alphaEnableBlendingState)))
+		return false;
+
+	// 关闭透明度混合
+	blendStateDesc.RenderTarget[0].BlendEnable = FALSE;
+	if(FAILED(m_device->CreateBlendState(&blendStateDesc, &m_alphaDisableBlendingState)))
+		return false;
+
 	// 获取显卡信息并输出到文本文件中
 	char videoCardName[128];
 	int videoMenmory;
@@ -322,10 +379,28 @@ void D3DClass::ShutDown()
 		m_swapChain->SetFullscreenState(false, NULL);
 	}
 
+	if (m_alphaEnableBlendingState)
+	{
+		m_alphaEnableBlendingState->Release();
+		m_alphaEnableBlendingState = NULL;
+	}
+
+	if (m_alphaDisableBlendingState)
+	{
+		m_alphaDisableBlendingState->Release();
+		m_alphaDisableBlendingState = NULL;
+	}
+
 	if (m_rasterState)
 	{
 		m_rasterState->Release();
 		m_rasterState = NULL;
+	}
+
+	if (m_depthDisabledStencilState)
+	{
+		m_depthDisabledStencilState->Release();
+		m_depthDisabledStencilState = NULL;
 	}
 
 	if (m_depthStencilView)
@@ -440,5 +515,45 @@ void D3DClass::GetVideoCardInfo(char* cardName, int& memory)
 {
 	strcpy_s(cardName, 128, m_videoCardDescription);
 	memory = m_videoCardMemory;
+	return;
+}
+
+void D3DClass::TurnZBufferOn()
+{
+	m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+	return;
+}
+
+void D3DClass::TurnZBufferOff()
+{
+	m_deviceContext->OMSetDepthStencilState(m_depthDisabledStencilState, 1);
+	return;
+}
+
+void D3DClass::TurnOnAlphaBlending()
+{
+	float blendFactor[4];
+
+	blendFactor[0] = 0.0f;
+	blendFactor[1] = 0.0f;
+	blendFactor[2] = 0.0f;
+	blendFactor[3] = 0.0f;
+
+	m_deviceContext->OMSetBlendState(m_alphaEnableBlendingState, blendFactor, 0xffffffff);
+
+	return;
+}
+
+void D3DClass::TurnOffAlphaBlending()
+{
+	float blendFactor[4];
+
+	blendFactor[0] = 0.0f;
+	blendFactor[1] = 0.0f;
+	blendFactor[2] = 0.0f;
+	blendFactor[3] = 0.0f;
+
+	m_deviceContext->OMSetBlendState(m_alphaDisableBlendingState, blendFactor, 0xffffffff);
+
 	return;
 }

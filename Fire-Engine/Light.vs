@@ -13,6 +13,12 @@ cbuffer MatrixBuffer
 	matrix projectionMatrix;
 };
 
+cbuffer CameraBuffer
+{
+	float3 cameraPosition;
+	float padding;
+};
+
 ////////
 // TYPEDEFS //
 ////////
@@ -28,6 +34,7 @@ struct PixelInputType
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
+	float3 viewDirection : TEXCOORD1;
 };
 
 //////////////////////////////////////
@@ -36,6 +43,7 @@ struct PixelInputType
 PixelInputType LightVertexShader(VertexInputType input)
 {
 	PixelInputType output;
+	float4 worldPosition;
 	
 	// 将齐次坐标w设为1，表示一个三维坐标
 	input.position.w = 1.0f;
@@ -53,6 +61,15 @@ PixelInputType LightVertexShader(VertexInputType input)
 	
 	// 将normal向量规格化
 	output.normal = normalize(output.normal);
+	
+	// 计算顶点在世界坐标中的位置
+	worldPosition = mul(input.position, worldMatrix);
+	
+	// 根据camera位置与点的世界坐标计算出观察方向
+	output.viewDirection = cameraPosition.xyz - worldPosition.xyz;
+	
+	// 将观察方向规格化
+	output.viewDirection = normalize(output.viewDirection);
 	
 	return output;
 }

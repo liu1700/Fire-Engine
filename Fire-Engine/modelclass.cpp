@@ -9,7 +9,8 @@ ModelClass::ModelClass()
 	m_vertexBuffer = NULL;
 	m_indexBuffer = NULL;
 	m_Texture = NULL;
-	m_Model = NULL;
+	m_inModel = NULL;
+	m_ModelInfo = NULL;
 }
 
 ModelClass::ModelClass(const ModelClass& other)
@@ -25,7 +26,7 @@ ModelClass::~ModelClass()
 bool ModelClass::Initialze(ID3D11Device* device, WCHAR* textureFilename, WCHAR* modelFilename)
 {
 	// 加载模型数据
-	if((m_ModelInfo = m_Model->LoadModelFromFile(modelFilename, m_vertexCount, m_indexCount)) == NULL)
+	if((m_ModelInfo = m_inModel->LoadModelFromFile(modelFilename, m_vertexCount, m_indexCount)) == NULL)
 		return false;
 	
 	// 初始化顶点与索引缓存
@@ -182,6 +183,15 @@ void ModelClass::ShutdownBuffers()
 	{
 		m_vertexBuffer->Release();
 		m_vertexBuffer = NULL;
+	}
+	if (m_ModelInfo)
+	{
+		for(int i = 0; i < m_vertexCount; i++)
+		{
+			delete []m_ModelInfo[i];
+		}
+		delete []m_ModelInfo;
+		m_ModelInfo = NULL;
 	}
 
 	return;
