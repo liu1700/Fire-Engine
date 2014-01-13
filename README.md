@@ -22,3 +22,10 @@ Just want to create a game engine of my own, that's all
   1.Load a model's information from a .txt file and build it.
   2.Update the .ps & .vs file to render the model with lighting and map textures on the model
   3.Let the model roll!
+  
+2014/1/13:
+  1.Render 2D images & 3D model on screen
+  2.Draw text on the screen with FW1FontWrapper. It's really awful to code text rendering by myself, so I use the FW1FontWrapper, it does work. Remember to set the flags to FW1_NOGEOMETRYSHADER or you can't see other model.
+  3.Working on DX input
+  
+  I really need to regroup my files, because it getting larger and larger!
