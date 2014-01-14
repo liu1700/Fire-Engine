@@ -8,6 +8,11 @@ SystemClass::SystemClass()
 {
 	m_Input = NULL;
 	m_Graphics = NULL;
+	m_Sound = NULL;
+
+	m_Fps = NULL;
+	m_Cpu = NULL;
+	m_Timer = NULL;
 }
 
 SystemClass::SystemClass(const SystemClass&)
@@ -24,6 +29,10 @@ bool SystemClass::Initialze()
 {
 	int screenWidth = 0, 
 		screenHeight = 0;
+
+	m_phWait = CreateWaitableTimer(NULL, false, NULL);
+	m_liDueTime.QuadPart = -1i64;	// 1s 后开始计时
+	SetWaitableTimer(m_phWait, &m_liDueTime, 20, NULL, NULL, 0);	// 20ms为一周期
 	
 	// 初始化窗口
 	InitialzeWindows(screenHeight, screenWidth);
@@ -33,12 +42,55 @@ bool SystemClass::Initialze()
 	if(!m_Input)
 		return false;
 
-	m_Input->Initialize();
+	if(!m_Input->Initialize(m_hinstance, m_hwnd, screenWidth, screenHeight, m_mouseEvent, m_keyboardEvent))
+	{
+		MessageBox(m_hwnd, L"无法初始化输入对象", L"Error", MB_OK);
+		return false;
+	}
 
 	// 初始化Graphics对象
 	m_Graphics = new GraphicsClass;
 	if (!(m_Graphics->Initialze(screenHeight, screenWidth, m_hwnd)))
 		return false;
+
+	// 初始化Sound对象
+	m_Sound = new SoundClass;
+	if(!m_Sound)
+		return false;
+
+	if(!m_Sound->Initialize(m_hwnd))
+	{
+		MessageBox(m_hwnd, L"无法初始化DirectSound",L"Error", MB_OK);
+		return false;
+	}
+
+	// 初始化Fps对象
+	m_Fps = new FpsClass;
+	if(!m_Fps)
+		return false;
+	m_Fps->Initialize();
+
+	// 初始化Cpu对象
+	m_Cpu = new CpuClass;
+	if(!m_Cpu)
+		return false;
+	m_Cpu->Initialize();
+
+	// 初始化Timer对象
+	m_Timer = new TimerClass;
+	if(!m_Timer)
+		return false;
+
+	if (!m_Timer->Initialize())
+	{
+		MessageBox(m_hwnd, L"不能初始化Timer对象", L"Error", MB_OK);
+		return false;
+	}
+
+	// 初始化handle数组	
+	//m_ah[0] = m_mouseEvent;
+	//m_ah[1] = m_keyboardEvent;
+	//m_ah[2] = m_phWait;
 
 	return true;
 	
@@ -46,10 +98,37 @@ bool SystemClass::Initialze()
 
 void SystemClass::Shutdown()
 {
+	//释放Timer，CPU，FPS对象
+	if(m_Timer)
+	{
+		delete m_Timer;
+		m_Timer = NULL;
+	}
+
+	if(m_Cpu)
+	{
+		delete m_Cpu;
+		m_Cpu = NULL;
+	}
+
+	if(m_Fps)
+	{
+		delete m_Fps;
+		m_Fps = NULL;
+	}
+
+	// 释放Sound对象
+	if (m_Sound)
+	{
+		m_Sound->ShutDown();
+		delete m_Sound;
+		m_Sound = NULL;
+	}
+
 	// 释放Graphic对象
 	if (m_Graphics)
 	{
-		m_Graphics->Shutdown();
+		m_Graphics->ShutDown();
 		delete m_Graphics;
 		m_Graphics = NULL;
 	}
@@ -57,6 +136,7 @@ void SystemClass::Shutdown()
 	// 释放Input对象
 	if (m_Input)
 	{
+		m_Input->ShutDown();
 		delete m_Input;
 		m_Input = NULL;
 	}
@@ -69,27 +149,47 @@ void SystemClass::Shutdown()
 
 void SystemClass::Run()
 {
-	HANDLE phWait = CreateWaitableTimer(NULL, false, NULL);
-	LARGE_INTEGER liDueTime;
-	liDueTime.QuadPart = -1i64;		// 1s 后开始计时
-	
-	SetWaitableTimer(phWait, &liDueTime, 20, NULL, NULL, 0);	// 20ms为一周期
-	DWORD dwRet = 0;
 	bool bExit = false;
 
 	while(!bExit)
 	{
 		MSG msg;
-		dwRet = MsgWaitForMultipleObjects(1, &phWait, false, INFINITE, QS_ALLINPUT);
+		m_dwRet = MsgWaitForMultipleObjects(1, &m_phWait, false, INFINITE, QS_ALLINPUT);
 
-		switch(dwRet - WAIT_OBJECT_0)
+		switch(m_dwRet - WAIT_OBJECT_0)
 		{
 		case 0:
 			{
+				if(!m_Input->ReadMouse())
+					bExit = true;
 				if(!Frame())
 					bExit = true;
+				if(!m_Input->ReadKeyboard())
+					bExit = true;
+
+				if (m_Input->IsEscapePressed() == true)
+				{
+					bExit = true;
+				}
 			}
 			break;
+		//case 1:
+		//	{
+		//		if(!m_Input->ReadKeyboard())
+		//			bExit = true;
+
+		//		if (m_Input->IsEscapePressed() == true)
+		//		{
+		//			bExit = true;
+		//		}
+		//	}
+		//	break;
+		//case 2:
+		//	{
+		//		if(!Frame())
+		//			bExit = true;
+		//	}
+		//	break;
 
 		case 1:
 			{
@@ -115,12 +215,20 @@ void SystemClass::Run()
 
 bool SystemClass::Frame()
 {
+	int mouseX, mouseY;
 
-	// 相应键盘按键
-	if (m_Input->isKeyDown(VK_ESCAPE))
-		return false;
+	// 更新系统状态
+	m_Timer->Frame();
+	m_Cpu->Frame();
+	m_Fps->Frame();
 
-	if (!m_Graphics->Frame())
+	// 输入循环
+	m_Input->Frame();
+	// 获取鼠标位置
+	m_Input->GetMouseLocation(mouseX, mouseY);
+
+	// 为图形对象进行帧处理
+	if (!m_Graphics->Frame(mouseX, mouseY, m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime()))
 		return false;
 
 	return true;
@@ -128,26 +236,9 @@ bool SystemClass::Frame()
 
 LRESULT CALLBACK SystemClass::MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch(uMsg)
-	{
-	case WM_KEYDOWN:
-		{
-			// 记录按键行为
-			m_Input->keyDown((unsigned int)wParam);
-			return 0;
-		}
-	case WM_KEYUP:
-		{
-			// 按键释放
-			m_Input->keyUp((unsigned int)wParam);
-			return 0;
-		}
-	default:
-		{
-			// 其他消息转为默认消息处理
-			return DefWindowProc(hWnd, uMsg, wParam, lParam);
-		}
-	}
+	// 其他消息转为默认消息处理
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+
 }
 
 void SystemClass::InitialzeWindows(int& screenWidth, int& screenHeight)

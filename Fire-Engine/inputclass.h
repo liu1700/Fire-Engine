@@ -31,14 +31,14 @@ public:
 	InputClass(const InputClass&);
 	~InputClass();
 
-	bool Initialize(HINSTANCE, HWND, int, int);
+	bool Initialize(HINSTANCE, HWND, int, int, HANDLE&, HANDLE&);
 	void ShutDown();
 	bool Frame();
 
 	bool IsEscapePressed();
 	void GetMouseLocation(int&, int&);
 
-private:
+
 	bool ReadKeyboard();
 	bool ReadMouse();
 	void ProcessInput();
@@ -50,6 +50,8 @@ private:
 
 	unsigned char m_keyboardState[256];
 	DIMOUSESTATE m_mouseState;
+
+	HANDLE m_hMouseEvent, m_hKeyboardEvent;
 
 	int m_screenWidth, m_screenHeight;
 	int m_mouseX, m_mouseY;

@@ -33,7 +33,7 @@ bool TextureShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 	return true;
 }
 
-void TextureShaderClass::Shutdown()
+void TextureShaderClass::ShutDown()
 {
 	ShutdownShader();
 

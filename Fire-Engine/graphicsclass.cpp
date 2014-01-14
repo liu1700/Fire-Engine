@@ -125,7 +125,7 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 	return true;
 }
 
-void GraphicsClass::Shutdown()
+void GraphicsClass::ShutDown()
 {
 	if (m_Text)
 	{
@@ -136,7 +136,7 @@ void GraphicsClass::Shutdown()
 
 	if (m_TextureShader)
 	{
-		m_TextureShader->Shutdown();
+		m_TextureShader->ShutDown();
 		delete m_TextureShader;
 		m_TextureShader = NULL;
 	}
@@ -190,10 +190,13 @@ void GraphicsClass::Shutdown()
 	return;
 }
 
-bool GraphicsClass::Frame()
+bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameTime)
 {
 	static float rotation = 0.0f;
 
+	m_Text->SetMousePosition(mouseX, mouseY, m_D3D->GetDeviceContext());
+	m_Text->SetFps(fps, m_D3D->GetDeviceContext());
+	m_Text->SetCpu(cpu, m_D3D->GetDeviceContext());
 	//  每帧更新旋转
 	rotation += (float)D3DX_PI * 0.005f;
 	if (rotation > 360.0f)
@@ -201,13 +204,16 @@ bool GraphicsClass::Frame()
 		rotation -= 360.0f;
 	}
 
-	if(!Render(rotation))
+	if(!Render(rotation, mouseX, mouseY, fps, cpu, frameTime))
 		return false;
+
+	// 设定Camera的位置
+	m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
 
 	return true;
 }
 
-bool GraphicsClass::Render(float rotation)
+bool GraphicsClass::Render(float rotation, int mouseX, int mouseY, int fps, int cpu, float frameTime)
 {
 	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix;
 
@@ -227,17 +233,16 @@ bool GraphicsClass::Render(float rotation)
 
 	// 关闭Z buffer
 	m_D3D->TurnZBufferOff();
-	// 开启透明混合
-	m_D3D->TurnOnAlphaBlending();
 
 	// 渲染text
-	if(!m_Text->Render(m_D3D->GetDeviceContext(), L"OK", 200, 400))
-		return false;
+	//m_Text->Render(m_D3D->GetDeviceContext(), L"OK", 200, 400);
+	m_Text->SetMousePosition(mouseX, mouseY, m_D3D->GetDeviceContext());
+	m_Text->SetFps(fps, m_D3D->GetDeviceContext());
+	m_Text->SetCpu(cpu, m_D3D->GetDeviceContext());
 
-	m_D3D->TurnOffAlphaBlending();
 	
 	// 将Bitmap的vertex与index buffer 放到图形绘制管线上
-	if(!m_Bitmap->Render(m_D3D->GetDeviceContext(), 1, 1))
+	if(!m_Bitmap->Render(m_D3D->GetDeviceContext(), 400, 400))
 		return false;
 
 	 //渲染Bitmap

@@ -36,11 +36,10 @@ public:
 	~GraphicsClass();
 
 	bool Initialze(int, int, HWND);
-	void Shutdown();
-	bool Frame();
+	void ShutDown();
+	bool Frame(int, int, int, int, float);
 
-private:
-	bool Render(float);
+	bool Render(float, int, int, int, int, float);
 
 private:
 	D3DClass* m_D3D;
