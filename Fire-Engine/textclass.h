@@ -33,6 +33,7 @@ public:
 	void SetMousePosition(int, int, ID3D11DeviceContext*);
 	bool SetFps(int, ID3D11DeviceContext*);
 	bool SetCpu(int, ID3D11DeviceContext*);
+	bool SetRenerCount(int, ID3D11DeviceContext*);
 
 private:
 	struct FontType

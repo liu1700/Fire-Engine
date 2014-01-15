@@ -16,6 +16,8 @@
 #include "bitmapclass.h"
 #include "textureshaderclass.h"
 #include "textclass.h"
+#include "modellistclass.h"
+#include "frustumclass.h"
 
 //////////////
 //GLOBALS
@@ -37,9 +39,9 @@ public:
 
 	bool Initialze(int, int, HWND);
 	void ShutDown();
-	bool Frame(int, int, int, int, float);
+	bool Frame(int, int, int, int, float, float);
 
-	bool Render(float, int, int, int, int, float);
+	bool Render( int, int, int, int, float);
 
 private:
 	D3DClass* m_D3D;
@@ -50,6 +52,8 @@ private:
 	LightClass* m_Light;
 	BitmapClass* m_Bitmap;
 	TextClass* m_Text;
+	ModelListClass* m_ModelList;
+	FrustumClass* m_Frustum;
 
 };
 

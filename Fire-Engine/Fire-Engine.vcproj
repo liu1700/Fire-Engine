@@ -213,6 +213,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\frustumclass.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\frustumclass.h"
+				>
+			</File>
+			<File
 				RelativePath=".\graphicsclass.cpp"
 				>
 			</File>
@@ -242,6 +250,14 @@
 			</File>
 			<File
 				RelativePath=".\modelclass.h"
+				>
+			</File>
+			<File
+				RelativePath=".\modellistclass.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\modellistclass.h"
 				>
 			</File>
 			<File
@@ -321,6 +337,14 @@
 		</File>
 		<File
 			RelativePath=".\inputclass.h"
+			>
+		</File>
+		<File
+			RelativePath=".\positionclass.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\positionclass.h"
 			>
 		</File>
 		<File

@@ -182,3 +182,25 @@ bool TextClass::SetCpu(int cpu, ID3D11DeviceContext* deviceContext)
 
 	return true;
 }
+
+bool TextClass::SetRenerCount(int rendercount, ID3D11DeviceContext* deviceContext)
+{
+	char tempString[32];
+	char rcString[32];
+
+	_itoa_s(rendercount, tempString, 10);
+
+	strcpy_s(rcString, "Render Count: ");
+	strcat_s(rcString, tempString);
+
+	size_t stringSize1 = strlen(rcString) + 1;
+	const size_t newsize1 = 100;
+	size_t convertedChars1 = 0;
+	wchar_t wcstring1[newsize1];
+	mbstowcs_s(&convertedChars1, wcstring1, stringSize1, rcString, _TRUNCATE);
+
+	// ‰÷»æ
+	Render(deviceContext, (const wchar_t*)wcstring1, 10, 60);
+
+	return true;
+}

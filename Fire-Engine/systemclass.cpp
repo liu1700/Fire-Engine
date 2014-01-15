@@ -13,6 +13,8 @@ SystemClass::SystemClass()
 	m_Fps = NULL;
 	m_Cpu = NULL;
 	m_Timer = NULL;
+
+	m_Position = NULL;
 }
 
 SystemClass::SystemClass(const SystemClass&)
@@ -87,6 +89,11 @@ bool SystemClass::Initialze()
 		return false;
 	}
 
+	// 初始化Position对象
+	m_Position = new PositionClass;
+	if(!m_Position)
+		return false;
+
 	// 初始化handle数组	
 	//m_ah[0] = m_mouseEvent;
 	//m_ah[1] = m_keyboardEvent;
@@ -98,6 +105,13 @@ bool SystemClass::Initialze()
 
 void SystemClass::Shutdown()
 {
+	// 释放位置对象
+	if (m_Position)
+	{
+		delete m_Position;
+		m_Position = NULL;
+	}
+
 	//释放Timer，CPU，FPS对象
 	if(m_Timer)
 	{
@@ -216,6 +230,8 @@ void SystemClass::Run()
 bool SystemClass::Frame()
 {
 	int mouseX, mouseY;
+	bool keyDown;
+	float rotationY;
 
 	// 更新系统状态
 	m_Timer->Frame();
@@ -227,8 +243,20 @@ bool SystemClass::Frame()
 	// 获取鼠标位置
 	m_Input->GetMouseLocation(mouseX, mouseY);
 
+	// 设定更新速度
+	m_Position->SetFrameTimer(m_Timer->GetTime());
+
+	// 检测左右键是否被按
+	keyDown = m_Input->IsLeftArrowPressed();
+	m_Position->TurnLeft(keyDown);
+
+	keyDown = m_Input->IsRightArrowPressed();
+	m_Position->TurnRight(keyDown);
+
+	m_Position->GetRotation(rotationY);
+
 	// 为图形对象进行帧处理
-	if (!m_Graphics->Frame(mouseX, mouseY, m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime()))
+	if (!m_Graphics->Frame(mouseX, mouseY, m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime(), rotationY))
 		return false;
 
 	return true;

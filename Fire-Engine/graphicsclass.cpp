@@ -14,6 +14,8 @@ GraphicsClass::GraphicsClass()
 	m_Bitmap = NULL;
 	m_TextureShader = NULL;
 	m_Text = NULL;
+	m_ModelList = NULL;
+	m_Frustum = NULL;
 }
 
 GraphicsClass::GraphicsClass(const GraphicsClass& other)
@@ -110,6 +112,23 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// 创建ModelList对象
+	m_ModelList = new ModelListClass;
+	if(!m_ModelList)
+		return false;
+
+	// 初始化25个模型对象
+	if(!m_ModelList->Initialze(25))
+	{
+		MessageBox(hwnd, L"无法初始化ModelList对象", L"Error", MB_OK);
+		return false;
+	}
+
+	// 创建视锥对象
+	m_Frustum = new FrustumClass;
+	if(!m_Frustum)
+		return false;
+
 	// 创建光照对象
 	m_Light = new LightClass;
 	if(!m_Light)
@@ -127,6 +146,19 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 
 void GraphicsClass::ShutDown()
 {
+	if (m_Frustum)
+	{
+		delete m_Frustum;
+		m_Frustum = NULL;
+	}
+
+	if (m_ModelList)
+	{
+		m_ModelList->ShutDown();
+		delete m_ModelList;
+		m_ModelList = NULL;
+	}
+
 	if (m_Text)
 	{
 		m_Text->ShutDown();
@@ -190,32 +222,29 @@ void GraphicsClass::ShutDown()
 	return;
 }
 
-bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameTime)
+bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameTime, float rotationY)
 {
-	static float rotation = 0.0f;
-
 	m_Text->SetMousePosition(mouseX, mouseY, m_D3D->GetDeviceContext());
 	m_Text->SetFps(fps, m_D3D->GetDeviceContext());
 	m_Text->SetCpu(cpu, m_D3D->GetDeviceContext());
-	//  每帧更新旋转
-	rotation += (float)D3DX_PI * 0.005f;
-	if (rotation > 360.0f)
-	{
-		rotation -= 360.0f;
-	}
 
-	if(!Render(rotation, mouseX, mouseY, fps, cpu, frameTime))
+	if(!Render( mouseX, mouseY, fps, cpu, frameTime))
 		return false;
 
-	// 设定Camera的位置
+	// 设定Camera的信息
 	m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
+	m_Camera->SetRotation(0.0f, rotationY, 0.0f);
 
 	return true;
 }
 
-bool GraphicsClass::Render(float rotation, int mouseX, int mouseY, int fps, int cpu, float frameTime)
+bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float frameTime)
 {
 	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix;
+	int modelCount, renderCount;
+	float positionX, positionY, positionZ, radius;
+	D3DXVECTOR4 color;
+	bool renderModel;
 
 	// BackBuffer清除为灰色
 	m_D3D->BeginScene(0.7f, 0.7f, 0.7f, 1.0f);
@@ -227,9 +256,47 @@ bool GraphicsClass::Render(float rotation, int mouseX, int mouseY, int fps, int 
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_D3D->GetWorldMatrix(worldMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
-
 	// 获取正交矩阵
 	m_D3D->GetOrthoMatrix(orthoMatrix);
+
+	// 建立视锥体
+	m_Frustum->ConstructFrustum(SCREEN_DEPTH, projectionMatrix, viewMatrix);
+	modelCount = m_ModelList->GetModelCount();
+
+	// 初始化渲染模型的数量为0
+	renderCount = 0;
+
+	for(int index=0; index<modelCount; index++)
+	{
+		// 获取模型数据
+		m_ModelList->GetData(index, positionX, positionY, positionZ, color);
+
+		// 设定半径
+		radius = 1.73205081f;
+
+			// 开始检测
+			renderModel = m_Frustum->CheckCube(positionX, positionY, positionZ, radius);
+
+		// 是否开始渲染
+		if(renderModel)
+		{
+			// 将模型移动至相应位置
+			D3DXMatrixTranslation(&worldMatrix, positionX, positionY, positionZ); 
+
+			// 将model的vertex与index buffer 放到图形绘制管线上
+			m_Model->Render(m_D3D->GetDeviceContext());
+
+			// 利用shader渲染model
+			if(!m_LightShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(),
+				worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+				m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower()))
+				return false;
+			// 重新设定至世界矩阵
+			m_D3D->GetWorldMatrix(worldMatrix);
+
+			renderCount++;
+		}
+	}
 
 	// 关闭Z buffer
 	m_D3D->TurnZBufferOff();
@@ -239,6 +306,7 @@ bool GraphicsClass::Render(float rotation, int mouseX, int mouseY, int fps, int 
 	m_Text->SetMousePosition(mouseX, mouseY, m_D3D->GetDeviceContext());
 	m_Text->SetFps(fps, m_D3D->GetDeviceContext());
 	m_Text->SetCpu(cpu, m_D3D->GetDeviceContext());
+	m_Text->SetRenerCount(renderCount, m_D3D->GetDeviceContext());
 
 	
 	// 将Bitmap的vertex与index buffer 放到图形绘制管线上
@@ -252,18 +320,6 @@ bool GraphicsClass::Render(float rotation, int mouseX, int mouseY, int fps, int 
 
 	// 开启Z buffer
 	m_D3D->TurnZBufferOn();
-
-	// 旋转世界矩阵
-	D3DXMatrixRotationY(&worldMatrix, rotation);
-
-	// 将model的vertex与index buffer 放到图形绘制管线上
-	m_Model->Render(m_D3D->GetDeviceContext());
-
-	// 利用shader渲染model
-	if(!m_LightShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(),
-		worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower()))
-		return false;
 
 	// 呈现
 	m_D3D->EndScene();
