@@ -29,3 +29,10 @@ Just want to create a game engine of my own, that's all
   3.Working on DX input
   
   I really need to regroup my files, because it getting larger and larger!
+  
+2014/1/15:
+  1.Render 25 cubes random both in color and position.
+  2.We have frustum view, I'd like to call vision....
+  3.We can use Left&Right keys to control our camera.
+  4.Listening to music~~
+  5.We can see the usage of CPU and FPS on our screen now.
