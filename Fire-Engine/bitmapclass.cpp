@@ -8,7 +8,7 @@ BitmapClass::BitmapClass()
 {
 	m_vertexBuffer = NULL;
 	m_indexBuffer = NULL;
-	m_Texture = NULL;
+	m_TextureArray = NULL;
 }
 
 BitmapClass::BitmapClass(const BitmapClass& other)
@@ -66,9 +66,9 @@ int BitmapClass::GetIndexCount()
 	return m_indexCount;
 }
 
-ID3D11ShaderResourceView* BitmapClass::GetTexture()
+ID3D11ShaderResourceView** BitmapClass::GetTexture()
 {
-	return m_Texture->GetTexture();
+	return m_TextureArray->GetTextureArray();
 }
 
 bool BitmapClass::InitialzeBuffers(ID3D11Device* device)
@@ -240,11 +240,11 @@ void BitmapClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 
 bool BitmapClass::LoadTexture(ID3D11Device* device, WCHAR* filename)
 {
-	m_Texture = new TextureClass;
-	if(!m_Texture)
+	m_TextureArray = new TextureClass;
+	if(!m_TextureArray)
 		return false;
 
-	if(!m_Texture->Initialze(device, filename))
+	if(!m_TextureArray->Initialze(device, filename))
 		return false;
 
 	return true;
@@ -252,11 +252,11 @@ bool BitmapClass::LoadTexture(ID3D11Device* device, WCHAR* filename)
 
 void BitmapClass::ReleaseTexture()
 {
-	if (m_Texture)
+	if (m_TextureArray)
 	{
-		m_Texture->ShutDown();
-		delete m_Texture;
-		m_Texture = NULL;
+		m_TextureArray->ShutDown();
+		delete m_TextureArray;
+		m_TextureArray = NULL;
 	}
 	return;
 }

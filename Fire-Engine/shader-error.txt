@@ -1,3 +1,12 @@
-d:\MyProjects\C_C++\Fire-Engine\Fire-Engine\Font.ps(41,5): error X3000: syntax error: unexpected token '}'
+d:\MyProjects\C_C++\Fire-Engine\Fire-Engine\Multitexture.ps(24,8): error X3003: redefinition of 'PixelInputType'
+
+
+d:\MyProjects\C_C++\Fire-Engine\Fire-Engine\Multitexture.ps(32,32): error X3120: invalid type for index - index must be a scalar, or a vector with the correct number of dimensions
+
+
+error X3501: 'M': entrypoint not found
+
+
+error X3501: 'M': entrypoint not found
 
 

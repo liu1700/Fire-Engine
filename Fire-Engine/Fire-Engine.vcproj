@@ -177,6 +177,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Multitexture.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\Multitexture.vs"
+				>
+			</File>
+			<File
 				RelativePath=".\Textures.ps"
 				>
 			</File>
@@ -188,22 +196,6 @@
 		<Filter
 			Name="Graphics"
 			>
-			<File
-				RelativePath=".\bitmapclass.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\bitmapclass.h"
-				>
-			</File>
-			<File
-				RelativePath=".\cameraclass.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\cameraclass.h"
-				>
-			</File>
 			<File
 				RelativePath=".\d3dclass.cpp"
 				>
@@ -237,22 +229,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\lightshaderclass.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\lightshaderclass.h"
-				>
-			</File>
-			<File
-				RelativePath=".\modelclass.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\modelclass.h"
-				>
-			</File>
-			<File
 				RelativePath=".\modellistclass.cpp"
 				>
 			</File>
@@ -261,11 +237,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\textclass.cpp"
+				RelativePath=".\texturearrayclass.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\textclass.h"
+				RelativePath=".\texturearrayclass.h"
 				>
 			</File>
 			<File
@@ -276,14 +252,94 @@
 				RelativePath=".\textureclass.h"
 				>
 			</File>
-			<File
-				RelativePath=".\textureshaderclass.cpp"
+			<Filter
+				Name="ShaderClasses"
 				>
-			</File>
-			<File
-				RelativePath=".\textureshaderclass.h"
+				<File
+					RelativePath=".\lightshaderclass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\lightshaderclass.h"
+					>
+				</File>
+				<File
+					RelativePath=".\multitextureshaderclass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\multitextureshaderclass.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shaderClass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shaderClass.h"
+					>
+				</File>
+				<File
+					RelativePath=".\textureshaderclass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\textureshaderclass.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="TextureRenderClasses"
 				>
-			</File>
+				<File
+					RelativePath=".\bitmapclass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\bitmapclass.h"
+					>
+				</File>
+				<File
+					RelativePath=".\modelclass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\modelclass.h"
+					>
+				</File>
+				<File
+					RelativePath=".\texturerenderClass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\texturerenderClass.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="CameraClass"
+				>
+				<File
+					RelativePath=".\cameraclass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\cameraclass.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="TextClass"
+				>
+				<File
+					RelativePath=".\textclass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\textclass.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="资源文件"
@@ -319,6 +375,10 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath=".\ClassDiagram1.cd"
+			>
+		</File>
 		<File
 			RelativePath=".\fileIO.cpp"
 			>

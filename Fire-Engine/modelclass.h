@@ -6,16 +6,9 @@
 #define _MODELCLASS_H_
 
 //////////////
-//INCLUDES
-//////////////
-#include <D3D11.h>
-#include <D3DX10math.h>
-
-//////////////
 //FE CLASS INCLUDES //
 //////////////
-#include "textureclass.h"
-#include "fileIO.h"
+#include "texturerenderClass.h"
 
 ////////////////////////////////////
 //¿‡√˚: ModelClass
@@ -27,13 +20,13 @@ public:
 	ModelClass(const ModelClass&);
 	~ModelClass();
 
-	bool Initialze(ID3D11Device*, WCHAR*, WCHAR*);
+	bool Initialze(ID3D11Device*,WCHAR*,WCHAR*,WCHAR*);
 	void ShutDown();
 	void Render(ID3D11DeviceContext*);
 
 	int GetIndexCount();
 
-	ID3D11ShaderResourceView* GetTexture();
+	ID3D11ShaderResourceView** GetTextureArray();
 
 private:
 	struct VertexType
@@ -48,7 +41,7 @@ private:
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 
-	bool LoadTexture(ID3D11Device*, WCHAR*);
+	bool LoadTexture(ID3D11Device*, WCHAR*, WCHAR*);
 	void ReleaseTexture();
 
 private:
@@ -56,7 +49,7 @@ private:
 	int m_vertexCount, m_indexCount;
 	float** m_ModelInfo;
 
-	TextureClass* m_Texture;
+	TextureArrayClass* m_TextureArray;
 	FileIOClass* m_inModel;
 };
 

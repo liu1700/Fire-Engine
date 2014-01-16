@@ -16,6 +16,7 @@ GraphicsClass::GraphicsClass()
 	m_Text = NULL;
 	m_ModelList = NULL;
 	m_Frustum = NULL;
+	m_MultiTextureShader = NULL;
 }
 
 GraphicsClass::GraphicsClass(const GraphicsClass& other)
@@ -70,7 +71,8 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 
 	// 初始化model对象
-	if(!m_Model->Initialze(m_D3D->GetDevice(), L"../Fire-Engine/Textures/test.dds", L"../Fire-Engine/Models/Cube.txt"))
+	if(!m_Model->Initialze(m_D3D->GetDevice(), L"../Fire-Engine/Models/Cube.txt", L"../Fire-Engine/Textures/stone01.dds", 
+		L"../Fire-Engine/Textures/dirt01.dds"))
 	{
 		MessageBox(hwnd, L"无法初始化model",L"Error", MB_OK);
 		return false;
@@ -97,6 +99,18 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 	if(!m_TextureShader->Initialize(m_D3D->GetDevice(), hwnd))
 	{
 		MessageBox(hwnd, L"初始化TextureShader对象错误", L"Error", MB_OK);
+		return false;
+	}
+
+	// 创建MultiTextureshader对象
+	m_MultiTextureShader = new MultiTextureShaderClass;
+	if(!m_MultiTextureShader)
+		return false;
+
+	// 初始化shader
+	if(!m_MultiTextureShader->Initialize(m_D3D->GetDevice(), hwnd))
+	{
+		MessageBox(hwnd, L"初始化MultiTextureShader对象错误", L"Error", MB_OK);
 		return false;
 	}
 
@@ -146,6 +160,13 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 
 void GraphicsClass::ShutDown()
 {
+	if (m_MultiTextureShader)
+	{
+		m_MultiTextureShader->ShutDown();
+		delete m_MultiTextureShader;
+		m_MultiTextureShader = NULL;
+	}
+
 	if (m_Frustum)
 	{
 		delete m_Frustum;
@@ -274,8 +295,8 @@ bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float fram
 		// 设定半径
 		radius = 1.73205081f;
 
-			// 开始检测
-			renderModel = m_Frustum->CheckCube(positionX, positionY, positionZ, radius);
+		// 开始检测
+		renderModel = m_Frustum->CheckCube(positionX, positionY, positionZ, radius);
 
 		// 是否开始渲染
 		if(renderModel)
@@ -284,11 +305,12 @@ bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float fram
 			D3DXMatrixTranslation(&worldMatrix, positionX, positionY, positionZ); 
 
 			// 将model的vertex与index buffer 放到图形绘制管线上
-			m_Model->Render(m_D3D->GetDeviceContext());
+			if(!m_Bitmap->Render(m_D3D->GetDeviceContext(), 400, 400))
+				return false;
 
 			// 利用shader渲染model
-			if(!m_LightShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(),
-				worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+			if(!m_LightShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(),
+				worldMatrix, viewMatrix, projectionMatrix, m_Bitmap->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
 				m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower()))
 				return false;
 			// 重新设定至世界矩阵
@@ -310,13 +332,15 @@ bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float fram
 
 	
 	// 将Bitmap的vertex与index buffer 放到图形绘制管线上
-	if(!m_Bitmap->Render(m_D3D->GetDeviceContext(), 400, 400))
-		return false;
+	//if(!m_Bitmap->Render(m_D3D->GetDeviceContext(), 400, 400))
+	//	return false;
 
 	 //渲染Bitmap
-	if(!m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), 
-		worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture()))
-		return false;
+	//if(!m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), 
+	//	worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture()))
+	//	return false;
+	m_MultiTextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_Model->GetTextureArray());
 
 	// 开启Z buffer
 	m_D3D->TurnZBufferOn();

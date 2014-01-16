@@ -6,16 +6,9 @@
 #define _BITMAPCLASS_H_
 
 //////////////
-//INCLUDES
-//////////////
-#include <D3D11.h>
-#include <D3DX10math.h>
-
-//////////////
 //FE CLASS INCLUDES //
 //////////////
-#include "textureclass.h"
-#include "fileIO.h"
+#include "texturerenderClass.h"
 
 ////////////////////////////////////
 //¿‡√˚: BitmapClass
@@ -33,7 +26,7 @@ public:
 
 	int GetIndexCount();
 
-	ID3D11ShaderResourceView* GetTexture();
+	ID3D11ShaderResourceView** GetTexture();
 
 private:
 	struct VertexType
@@ -55,7 +48,7 @@ private:
 	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
 	int m_vertexCount, m_indexCount;
 
-	TextureClass* m_Texture;
+	TextureArrayClass* m_TextureArray;
 	
 	int m_screenWidth, m_screenHeight;
 	int m_bitmapWidth, m_bitmapHeight;

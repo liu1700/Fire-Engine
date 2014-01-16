@@ -1,74 +1,33 @@
 
-//////////////////////////////////////////////////////////
-//文件名: modelclass.cpp		日期: 创建于:2014/1/10
-//////////////////////////////////////////////////////////
-#include "modelclass.h"
-
-ModelClass::ModelClass()
+TectureRenderClass::TectureRenderClass()
 {
 	m_vertexBuffer = NULL;
 	m_indexBuffer = NULL;
 	m_TextureArray = NULL;
-	m_inModel = NULL;
-	m_ModelInfo = NULL;
 }
 
-ModelClass::ModelClass(const ModelClass& other)
+TectureRenderClass::TectureRenderClass(const TectureRenderClass& other)
 {
 
 }
 
-ModelClass::~ModelClass()
+TectureRenderClass::~TectureRenderClass()
 {
 
 }
 
-bool ModelClass::Initialze(ID3D11Device* device, WCHAR* modelFilename, WCHAR* textureFilename1, WCHAR* textureFilename2)
-{
-	// 加载模型数据
-	if((m_ModelInfo = m_inModel->LoadModelFromFile(modelFilename, m_vertexCount, m_indexCount)) == NULL)
-		return false;
-	
-	// 初始化顶点与索引缓存
-	if(!InitialzeBuffers(device))
-		return false;
-
-	// 为模型加载纹理
-	if(!LoadTexture(device, textureFilename1, textureFilename2))
-		return false;
-
-	return true;
-}
-
-void ModelClass::ShutDown()
-{
-	ReleaseTexture();
-
-	ShutdownBuffers();
-
-	return;
-}
-
-void ModelClass::Render(ID3D11DeviceContext* deviceContext)
-{
-	// 将顶点与索引缓存置于绘图管线中
-	RenderBuffers(deviceContext);
-
-	return;
-}
-
-int ModelClass::GetIndexCount()
+int TectureRenderClass::GetIndexCount()
 {
 	// 返回索引个数，提供给shader
 	return m_indexCount;
 }
 
-ID3D11ShaderResourceView** ModelClass::GetTextureArray()
+ID3D11ShaderResourceView** TectureRenderClass::GetTexture()
 {
 	return m_TextureArray->GetTextureArray();
 }
 
-bool ModelClass::InitialzeBuffers(ID3D11Device* device)
+bool TectureRenderClass::InitialzeBuffers(ID3D11Device* device)
 {
 	VertexType* vertices;
 	unsigned long* indices;
@@ -76,8 +35,8 @@ bool ModelClass::InitialzeBuffers(ID3D11Device* device)
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 
 	////  两个数组分别设定三个顶点与三个索引
-	//m_vertexCount = 6;
-	//m_indexCount = 6;
+	m_vertexCount = 6;
+	m_indexCount = m_vertexCount;
 
 	vertices = new VertexType[m_vertexCount];
 	indices = new unsigned long[m_indexCount];
@@ -85,22 +44,18 @@ bool ModelClass::InitialzeBuffers(ID3D11Device* device)
 	if(!vertices || !indices)
 		return false;
 
-	// 顺时针填充点，会被认为是正面，逆时针被认为反面，填充点的顺序很重要
-
-	for (int i = 0; i < m_vertexCount; i++)
+	memset(vertices, 0, (sizeof(VertexType) * m_vertexCount));
+	for(int i = 0; i < m_indexCount; i++)
 	{
-		vertices[i].position = D3DXVECTOR3(m_ModelInfo[i][0], m_ModelInfo[i][1], m_ModelInfo[i][2]);
-		vertices[i].texture = D3DXVECTOR2(m_ModelInfo[i][3], m_ModelInfo[i][4]);
-		vertices[i].normal = D3DXVECTOR3(m_ModelInfo[i][5], m_ModelInfo[i][6], m_ModelInfo[i][7]);
-
 		indices[i] = i;
 	}
 
+
 	// 设置静态顶点缓冲的信息
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	vertexBufferDesc.ByteWidth = sizeof(VertexType) * m_vertexCount;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.CPUAccessFlags = 0;
+	vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	vertexBufferDesc.MiscFlags = 0;
 	vertexBufferDesc.StructureByteStride = 0;
 
@@ -140,7 +95,7 @@ bool ModelClass::InitialzeBuffers(ID3D11Device* device)
 	return true;
 }
 
-void ModelClass::ShutdownBuffers()
+void TectureRenderClass::ShutdownBuffers()
 {
 	if (m_indexBuffer)
 	{
@@ -152,20 +107,11 @@ void ModelClass::ShutdownBuffers()
 		m_vertexBuffer->Release();
 		m_vertexBuffer = NULL;
 	}
-	if (m_ModelInfo)
-	{
-		for(int i = 0; i < m_vertexCount; i++)
-		{
-			delete []m_ModelInfo[i];
-		}
-		delete []m_ModelInfo;
-		m_ModelInfo = NULL;
-	}
 
 	return;
 }
 
-void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
+void TectureRenderClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 {
 	unsigned int stride;
 	unsigned int offset;
@@ -186,19 +132,7 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	return;
 }
 
-bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename1, WCHAR* filename2)
-{
-	m_TextureArray = new TextureArrayClass;
-	if(!m_TextureArray)
-		return false;
-
-	if(!m_TextureArray->Initialze(device, filename1, filename2))
-		return false;
-
-	return true;
-}
-
-void ModelClass::ReleaseTexture()
+void TectureRenderClass::ReleaseTexture()
 {
 	if (m_TextureArray)
 	{
