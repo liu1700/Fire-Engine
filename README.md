@@ -36,3 +36,10 @@ Just want to create a game engine of my own, that's all
   3.We can use Left&Right keys to control our camera.
   4.Listening to music~~
   5.We can see the usage of CPU and FPS on our screen now.
+  
+2014/1/17:
+  1.Most of the things are about Textures, MultiTextures, AlphaMapTexture, All of them works well on the 2D Rendering, but the render of 3D model is a mass..Debug it tomorrow!!!
+  2.We can use Arrow Keys to look different directions now.
+  3.Almost finish the creation of base classes(maybe something wrong happend when I code the base classes that make the 3D model wrong??)
+  
+  Tomorrow I have to find the bug of the rendering of 3D model
