@@ -3,15 +3,9 @@
 //文件名: lightshaderclass.cpp		日期: 创建于:2014/1/11 //
 //////////////////////////////////////////////////////////
 #include "lightshaderclass.h"
-#include "fileIO.h"
 
 LightShaderClass::LightShaderClass()
 {
-	m_vertexShader = NULL;
-	m_pixelShader = NULL;
-	m_matrixBuffer = NULL;
-	m_layout = NULL;
-	m_sampleState = NULL;
 	m_lightBuffer = NULL;
 	m_cameraBuffer = NULL;
 }
@@ -29,7 +23,7 @@ LightShaderClass::~LightShaderClass()
 bool LightShaderClass::Initialze(ID3D11Device* device, HWND hwnd)
 {
 	// 初始化shader
-	if(!InitialzeShader(device, hwnd, L"../Fire-Engine/light.vs", L"../Fire-Engine/light.ps"))
+	if(!InitialzeShader(device, hwnd, L"../Fire-Engine/light.vs", L"../Fire-Engine/light.ps", "LightVertexShader", "LightPixelShader"))
 		return false;
 
 	return true;
@@ -44,11 +38,11 @@ void LightShaderClass::ShutDown()
 
 bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, 
 							  D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix,
-							  ID3D11ShaderResourceView* texture, 
+							  ID3D11ShaderResourceView** textureArray, 
 							  D3DXVECTOR3 lightDirection, D3DXVECTOR4 ambientColor,D3DXVECTOR4 diffuseColor,
 							  D3DXVECTOR3 cameraPosition, D3DXVECTOR4 specularColor, float specularPower)
 {
-	if(!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, lightDirection, ambientColor, diffuseColor,
+	if(!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, textureArray, lightDirection, ambientColor, diffuseColor,
 						cameraPosition, specularColor, specularPower))
 		return false;
 	
@@ -58,7 +52,7 @@ bool LightShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount
 	return true;
 }
 
-bool LightShaderClass::InitialzeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
+bool LightShaderClass::InitialzeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, char* vsFuncname, char* psFuncname)
 { 
 	// 这里边的DESC全部用来设定接口的描述信息
 	ID3D10Blob* errorMessage;
@@ -77,7 +71,7 @@ bool LightShaderClass::InitialzeShader(ID3D11Device* device, HWND hwnd, WCHAR* v
 	pixelShaderBuffer = NULL;
 
 	// 编译Shader
-	if (FAILED(D3DX11CompileFromFile(vsFilename, NULL, NULL, "LightVertexShader", "vs_5_0",
+	if (FAILED(D3DX11CompileFromFile(vsFilename, NULL, NULL, vsFuncname, "vs_5_0",
 		D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, &vertexShaderBuffer, &errorMessage, NULL)))
 	{
 		if (errorMessage)
@@ -92,7 +86,7 @@ bool LightShaderClass::InitialzeShader(ID3D11Device* device, HWND hwnd, WCHAR* v
 		return false;
 	}
 
-	if (FAILED(D3DX11CompileFromFile(psFilename, NULL, NULL, "LightPixelShader", "ps_5_0",
+	if (FAILED(D3DX11CompileFromFile(psFilename, NULL, NULL, psFuncname, "ps_5_0",
 		D3D10_SHADER_ENABLE_STRICTNESS, 0, NULL, &pixelShaderBuffer, &errorMessage, NULL)))
 	{
 		if (errorMessage)
@@ -252,29 +246,9 @@ void LightShaderClass::ShutdownShader()
 	return;
 }
 
-void LightShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
-{
-	FileIOClass* compileErrors;
-
-	compileErrors = new FileIOClass;
-	if(!compileErrors)
-		return;
-
-	// 获取错误信息的文本指针,并写入txt
-	compileErrors->WriteTextFile(L"shader-error.txt",(char*)errorMessage->GetBufferPointer());
-
-	// 释放errorMessage
-	errorMessage->Release();
-	errorMessage = NULL;
-
-	MessageBox(hwnd, L"编译Shader出现错误，查看shader-error.txt获取更多信息。", shaderFilename, MB_OK);
-
-	return;
-}
-
 bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, D3DXMATRIX worldMatrix, 
 										   D3DXMATRIX viewMatrix, D3DXMATRIX projectionMatrix,
-										   ID3D11ShaderResourceView* texture, D3DXVECTOR3 lightDirection, D3DXVECTOR4 ambientColor, D3DXVECTOR4 diffuseColor,
+										   ID3D11ShaderResourceView** textureArray, D3DXVECTOR3 lightDirection, D3DXVECTOR4 ambientColor, D3DXVECTOR4 diffuseColor,
 										   D3DXVECTOR3 cameraPosition, D3DXVECTOR4 specularColor, float specularPower)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -327,7 +301,7 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, D
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_cameraBuffer);
 
 	// 设定纹理资源
-	deviceContext->PSSetShaderResources(0, 1, &texture);
+	deviceContext->PSSetShaderResources(0, 1, textureArray);
 
 	// 锁定光照缓冲区，使其可写
 	if(FAILED(deviceContext->Map(m_lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, 
@@ -351,22 +325,4 @@ bool LightShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, D
 	deviceContext->PSSetConstantBuffers(bufferNumber, 1, &m_lightBuffer);
 
 	return true;
-}
-
-void LightShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
-{
-	// 设定顶点输入布局
-	deviceContext->IASetInputLayout(m_layout);
-
-	// 设定vertex与pixel shader
-	deviceContext->VSSetShader(m_vertexShader, NULL, 0);
-	deviceContext->PSSetShader(m_pixelShader, NULL, 0);
-
-	// 在pixel shader中设定抽样状态
-	deviceContext->PSSetSamplers(0, 1, &m_sampleState);
-
-	// 渲染图形
-	deviceContext->DrawIndexed(indexCount, 0, 0);
-
-	return;
 }

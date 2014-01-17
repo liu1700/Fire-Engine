@@ -19,6 +19,7 @@
 #include "modellistclass.h"
 #include "frustumclass.h"
 #include "multitextureshaderclass.h"
+#include "alphamapshaderclass.h"
 
 //////////////
 //GLOBALS
@@ -40,9 +41,9 @@ public:
 
 	bool Initialze(int, int, HWND);
 	void ShutDown();
-	bool Frame(int, int, int, int, float, float);
+	bool Frame(int, int, int, int, float, D3DXVECTOR3);
 
-	bool Render( int, int, int, int, float);
+	bool Render( int, int, int, int, float, float);
 
 private:
 	D3DClass* m_D3D;
@@ -57,6 +58,8 @@ private:
 	FrustumClass* m_Frustum;
 
 	MultiTextureShaderClass* m_MultiTextureShader;
+
+	AlphaMapShaderClass* m_AlphaMapShader;
 
 };
 

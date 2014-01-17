@@ -1,0 +1,45 @@
+
+//////////////////////////////////////////////////////////
+//文件名: Multitexture.ps		日期: 创建于:2014/1/16
+//////////////////////////////////////////////////////////
+
+/////////////
+// GLOBALS //
+/////////////
+Texture2D shaderTexture[3];
+SamplerState SampleType;
+
+//////////////
+// TYPEDEFS //
+//////////////
+struct PixelInputType
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+};
+
+//////////////////////////////////////
+// Pixel Shader
+//////////////////////////////////////
+float4 AlphaMapPixelShader(PixelInputType input) : SV_TARGET
+{
+	float4 textureColor1;
+	float4 textureColor2;
+	float4 alphaValue;
+	float4 blendColor;
+	
+	
+	// 获取纹理的采样与插取后所得到的颜色
+	textureColor1 = shaderTexture[0].Sample(SampleType, input.tex);
+	textureColor2 = shaderTexture[1].Sample(SampleType, input.tex);
+	alphaValue = shaderTexture[2].Sample(SampleType, input.tex);
+	
+	// 通过Gamma修正值来将两张纹理混合,并增加透明度混合
+	blendColor = (alphaValue * textureColor1) + ((1.0 - alphaValue) * textureColor2);
+	
+	// 算出光照强度
+	blendColor = saturate(blendColor);
+	
+	return blendColor;
+}
+

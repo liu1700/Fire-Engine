@@ -6,7 +6,7 @@
 #define _MULTITEXTURESHADERCLASS_H_
 
 //////////////
-// FE INCLUDES //
+// FE CLASS INCLUDES //
 //////////////
 #include "shaderClass.h"
 

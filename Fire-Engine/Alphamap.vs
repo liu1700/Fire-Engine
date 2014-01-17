@@ -31,7 +31,7 @@ struct PixelInputType
 //////////////////////////////////////
 // Vertex Shader
 //////////////////////////////////////
-PixelInputType MultiTextureVertexShader(VertexInputType input)
+PixelInputType AlphaMapVertexShader(VertexInputType input)
 {
 	PixelInputType output;
     

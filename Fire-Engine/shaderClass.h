@@ -23,11 +23,6 @@ public:
 	ShaderClass(const ShaderClass&);
 	virtual ~ShaderClass() {};
 
-	void SetVSFilename(WCHAR*);
-	void SetPSFilename(WCHAR*);
-	void SetVSFunctionName(WCHAR*);
-	void SetPSFunctionName(WCHAR*);
-
 protected:
 	virtual bool InitializeShader(ID3D11Device*, HWND, WCHAR*, WCHAR*, char*, char*);
 	virtual void ShutdownShader();
@@ -49,11 +44,6 @@ protected:
 	ID3D11InputLayout* m_layout;
 	ID3D11Buffer* m_matrixBuffer;
 	ID3D11SamplerState* m_sampleState;
-
-	LPCSTR m_vsFilename;
-	LPCSTR m_psFilename;
-	LPCSTR m_vsFuncname;
-	LPCSTR m_psFuncname;
 };
 
 #endif

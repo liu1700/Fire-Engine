@@ -25,7 +25,10 @@ public:
 	TectureRenderClass(const TectureRenderClass&);
 	virtual ~TectureRenderClass();
 
-protected:
+	int GetIndexCount();
+	ID3D11ShaderResourceView** GetTextureArray();
+
+public:
 	struct VertexType
 	{
 		D3DXVECTOR3 position;
@@ -33,12 +36,12 @@ protected:
 	};
 
 protected:
-	bool InitialzeBuffers(ID3D11Device*);
-	void ShutdownBuffers();
-	void RenderBuffers(ID3D11DeviceContext*);
+	virtual bool InitialzeBuffers(ID3D11Device*);
+	virtual void ShutdownBuffers();
+	virtual void RenderBuffers(ID3D11DeviceContext*);
 
-	bool LoadTexture(ID3D11Device*, WCHAR*);
-	void ReleaseTexture();
+	virtual bool LoadTexture();
+	virtual void ReleaseTexture();
 
 protected:
 	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;

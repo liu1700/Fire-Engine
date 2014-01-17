@@ -17,6 +17,7 @@ GraphicsClass::GraphicsClass()
 	m_ModelList = NULL;
 	m_Frustum = NULL;
 	m_MultiTextureShader = NULL;
+	m_AlphaMapShader = NULL;
 }
 
 GraphicsClass::GraphicsClass(const GraphicsClass& other)
@@ -65,19 +66,6 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	// 创建model对象
-	m_Model = new ModelClass;
-	if(!m_Model)
-		return false;
-
-	// 初始化model对象
-	if(!m_Model->Initialze(m_D3D->GetDevice(), L"../Fire-Engine/Models/Cube.txt", L"../Fire-Engine/Textures/stone01.dds", 
-		L"../Fire-Engine/Textures/dirt01.dds"))
-	{
-		MessageBox(hwnd, L"无法初始化model",L"Error", MB_OK);
-		return false;
-	}
-
 	// 创建Lightshader对象
 	m_LightShader = new LightShaderClass;
 	if(!m_LightShader)
@@ -114,15 +102,40 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// 创建并初始化AlphaMapShader对象
+	m_AlphaMapShader = new AlphaMapShaderClass;
+	if(!m_AlphaMapShader)
+		return false;
+
+	if (!m_AlphaMapShader->Initialize(m_D3D->GetDevice(), hwnd))
+	{
+		MessageBox(hwnd, L"初始化AlphaMapShader对象错误", L"Error", MB_OK);
+		return false;
+	}
+
 	// 创建2D图像对象
 	m_Bitmap = new BitmapClass;
 	if(!m_Bitmap)
 		return false;
 
 	// 初始化bitmap
-	if(!m_Bitmap->Initialze(m_D3D->GetDevice(), screenWidth, screenHeight, L"../Fire-Engine/Textures/test.dds", 256,256))
+	if(!m_Bitmap->Initialze(m_D3D->GetDevice(), screenWidth, screenHeight, L"../Fire-Engine/Textures/stone01.dds", 
+							L"../Fire-Engine/Textures/dirt01.dds", L"../Fire-Engine/Textures/alpha01.dds", 256,256))
 	{
 		MessageBox(hwnd, L"无法初始化bitmap对象", L"Error", MB_OK);
+		return false;
+	}
+
+	// 创建model对象
+	m_Model = new ModelClass;
+	if(!m_Model)
+		return false;
+
+	// 初始化model对象
+	if(!m_Model->Initialze(m_D3D->GetDevice(), L"../Fire-Engine/Models/Cube.txt", L"../Fire-Engine/Textures/stone01.dds", 
+		L"../Fire-Engine/Textures/dirt01.dds"))
+	{
+		MessageBox(hwnd, L"无法初始化model",L"Error", MB_OK);
 		return false;
 	}
 
@@ -160,6 +173,13 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 
 void GraphicsClass::ShutDown()
 {
+	if (m_AlphaMapShader)
+	{
+		m_AlphaMapShader->ShutDown();
+		delete m_AlphaMapShader;
+		m_AlphaMapShader = NULL;
+	}
+
 	if (m_MultiTextureShader)
 	{
 		m_MultiTextureShader->ShutDown();
@@ -243,23 +263,31 @@ void GraphicsClass::ShutDown()
 	return;
 }
 
-bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameTime, float rotationY)
+bool GraphicsClass::Frame(int mouseX, int mouseY, int fps, int cpu, float frameTime, D3DXVECTOR3 rotation)
 {
 	m_Text->SetMousePosition(mouseX, mouseY, m_D3D->GetDeviceContext());
 	m_Text->SetFps(fps, m_D3D->GetDeviceContext());
 	m_Text->SetCpu(cpu, m_D3D->GetDeviceContext());
 
-	if(!Render( mouseX, mouseY, fps, cpu, frameTime))
+	static float modelrotation = 0.0f;
+
+	modelrotation += (float)D3DX_PI * 0.01f;
+	if(modelrotation > 360.0f)
+	{
+		modelrotation -= 360.0f;
+	}
+
+	if(!Render( mouseX, mouseY, fps, cpu, frameTime, modelrotation))
 		return false;
 
 	// 设定Camera的信息
 	m_Camera->SetPosition(0.0f, 0.0f, -10.0f);
-	m_Camera->SetRotation(0.0f, rotationY, 0.0f);
+	m_Camera->SetRotation(rotation.x, rotation.y, 0.0f);
 
 	return true;
 }
 
-bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float frameTime)
+bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float frameTime, float rotation)
 {
 	D3DXMATRIX viewMatrix, projectionMatrix, worldMatrix, orthoMatrix;
 	int modelCount, renderCount;
@@ -299,26 +327,39 @@ bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float fram
 		renderModel = m_Frustum->CheckCube(positionX, positionY, positionZ, radius);
 
 		// 是否开始渲染
-		if(renderModel)
+		if(renderModel = false)
 		{
 			// 将模型移动至相应位置
 			D3DXMatrixTranslation(&worldMatrix, positionX, positionY, positionZ); 
 
 			// 将model的vertex与index buffer 放到图形绘制管线上
-			if(!m_Bitmap->Render(m_D3D->GetDeviceContext(), 400, 400))
+			m_Model->Render(m_D3D->GetDeviceContext());
+
+			//// 利用shader渲染model
+			//if(!m_LightShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(),
+			//	worldMatrix, viewMatrix, projectionMatrix, m_Bitmap->GetTextureArray(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+			//	m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower()))
+			//	return false;
+
+			if(!m_MultiTextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+				m_Model->GetTextureArray()))
 				return false;
 
-			// 利用shader渲染model
-			if(!m_LightShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(),
-				worldMatrix, viewMatrix, projectionMatrix, m_Bitmap->GetTexture(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-				m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower()))
-				return false;
 			// 重新设定至世界矩阵
 			m_D3D->GetWorldMatrix(worldMatrix);
 
 			renderCount++;
 		}
 	}
+
+	D3DXMatrixRotationY(&worldMatrix, rotation);
+
+	// 将model的vertex与index buffer 放到图形绘制管线上
+	m_Model->Render(m_D3D->GetDeviceContext());
+
+	if(!m_MultiTextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_Model->GetTextureArray()))
+		return false;
 
 	// 关闭Z buffer
 	m_D3D->TurnZBufferOff();
@@ -332,15 +373,13 @@ bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float fram
 
 	
 	// 将Bitmap的vertex与index buffer 放到图形绘制管线上
-	//if(!m_Bitmap->Render(m_D3D->GetDeviceContext(), 400, 400))
-	//	return false;
+	if(!m_Bitmap->Render(m_D3D->GetDeviceContext(), 400, 400))
+		return false;
 
 	 //渲染Bitmap
-	//if(!m_TextureShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), 
-	//	worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTexture()))
-	//	return false;
-	m_MultiTextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
-		m_Model->GetTextureArray());
+	if(!m_AlphaMapShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), 
+		worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTextureArray()))
+		return false;
 
 	// 开启Z buffer
 	m_D3D->TurnZBufferOn();

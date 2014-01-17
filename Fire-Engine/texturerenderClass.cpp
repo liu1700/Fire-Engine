@@ -1,4 +1,7 @@
 
+///////TEXTURERENDER_CLASS_CPP_/////////
+#include "texturerenderClass.h"
+
 TectureRenderClass::TectureRenderClass()
 {
 	m_vertexBuffer = NULL;
@@ -22,7 +25,7 @@ int TectureRenderClass::GetIndexCount()
 	return m_indexCount;
 }
 
-ID3D11ShaderResourceView** TectureRenderClass::GetTexture()
+ID3D11ShaderResourceView** TectureRenderClass::GetTextureArray()
 {
 	return m_TextureArray->GetTextureArray();
 }
@@ -33,10 +36,6 @@ bool TectureRenderClass::InitialzeBuffers(ID3D11Device* device)
 	unsigned long* indices;
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
-
-	////  两个数组分别设定三个顶点与三个索引
-	m_vertexCount = 6;
-	m_indexCount = m_vertexCount;
 
 	vertices = new VertexType[m_vertexCount];
 	indices = new unsigned long[m_indexCount];
@@ -141,4 +140,9 @@ void TectureRenderClass::ReleaseTexture()
 		m_TextureArray = NULL;
 	}
 	return;
+}
+
+bool TectureRenderClass::LoadTexture()
+{
+	return true;
 }

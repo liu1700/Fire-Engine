@@ -13,20 +13,16 @@
 ////////////////////////////////////
 //¿‡√˚: BitmapClass
 ////////////////////////////////////
-class BitmapClass
+class BitmapClass : public TectureRenderClass
 {
 public:
 	BitmapClass();
 	BitmapClass(const BitmapClass&);
 	~BitmapClass();
 
-	bool Initialze(ID3D11Device*, int, int, WCHAR*, int, int);
+	bool Initialze(ID3D11Device*, int, int, WCHAR*, WCHAR*, WCHAR*, int, int);
 	void ShutDown();
 	bool Render(ID3D11DeviceContext*, int, int);
-
-	int GetIndexCount();
-
-	ID3D11ShaderResourceView** GetTexture();
 
 private:
 	struct VertexType
@@ -37,18 +33,11 @@ private:
 
 private:
 	bool InitialzeBuffers(ID3D11Device*);
-	void ShutdownBuffers();
 	bool UpdateBuffer(ID3D11DeviceContext*, int, int);
-	void RenderBuffers(ID3D11DeviceContext*);
 
-	bool LoadTexture(ID3D11Device*, WCHAR*);
-	void ReleaseTexture();
+	bool LoadTexture(ID3D11Device*, WCHAR*, WCHAR*, WCHAR*);
 
 private:
-	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
-	int m_vertexCount, m_indexCount;
-
-	TextureArrayClass* m_TextureArray;
 	
 	int m_screenWidth, m_screenHeight;
 	int m_bitmapWidth, m_bitmapHeight;

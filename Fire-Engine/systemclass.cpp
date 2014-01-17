@@ -231,7 +231,8 @@ bool SystemClass::Frame()
 {
 	int mouseX, mouseY;
 	bool keyDown;
-	float rotationY;
+	D3DXVECTOR3 rotation;
+	//D3DXVECTOR3 transfer;
 
 	// 更新系统状态
 	m_Timer->Frame();
@@ -246,17 +247,36 @@ bool SystemClass::Frame()
 	// 设定更新速度
 	m_Position->SetFrameTimer(m_Timer->GetTime());
 
-	// 检测左右键是否被按
+	// 检测键是否被按
 	keyDown = m_Input->IsLeftArrowPressed();
 	m_Position->TurnLeft(keyDown);
 
 	keyDown = m_Input->IsRightArrowPressed();
 	m_Position->TurnRight(keyDown);
 
-	m_Position->GetRotation(rotationY);
+	keyDown = m_Input->IsUpArrowPressed();
+	m_Position->LookUp(keyDown);
+
+	keyDown = m_Input->IsDownArrowPressed();
+	m_Position->LookDown(keyDown);
+
+	//keyDown = m_Input->IsMoveForward();
+	//m_Position->MoveForward(keyDown);
+
+	//keyDown = m_Input->IsMoveBack();
+	//m_Position->MoveBack(keyDown);
+
+	//keyDown = m_Input->IsMoveLeft();
+	//m_Position->MoveLeft(keyDown);
+
+	//keyDown = m_Input->IsMoveRight();
+	//m_Position->MoveRight(keyDown);
+
+	m_Position->GetRotation(rotation.x, rotation.y);
+	//m_Position->GetTransfer(transfer.x, transfer.z);
 
 	// 为图形对象进行帧处理
-	if (!m_Graphics->Frame(mouseX, mouseY, m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime(), rotationY))
+	if (!m_Graphics->Frame(mouseX, mouseY, m_Fps->GetFps(), m_Cpu->GetCpuPercentage(), m_Timer->GetTime(), rotation))
 		return false;
 
 	return true;

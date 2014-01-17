@@ -243,23 +243,3 @@ void ShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCoun
 
 	return;
 }
-
-//void ShaderClass::SetVSFilename(WCHAR* vsFilename)
-//{
-//	m_vsFilename = (LPCSTR)W2CT(vsFilename);
-//}
-//
-//void ShaderClass::SetPSFilename(WCHAR* psFilename)
-//{
-//	m_psFilename = (LPCSTR)W2CT(psFilename);
-//}
-//
-//void ShaderClass::SetVSFunctionName(WCHAR* vsFunctionName)
-//{
-//	m_vsFuncname = (LPCSTR)W2CT(vsFunctionName);
-//}
-//
-//void ShaderClass::SetPSFunctionName(WCHAR* psFunctionName)
-//{
-//	m_psFuncname = (LPCSTR)W2CT(psFunctionName);
-//}

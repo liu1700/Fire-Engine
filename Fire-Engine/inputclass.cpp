@@ -204,6 +204,60 @@ bool InputClass::IsRightArrowPressed()
 	return false;
 }
 
+bool InputClass::IsUpArrowPressed()
+{
+	if (m_keyboardState[DIK_UPARROW]&0x80)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool InputClass::IsDownArrowPressed()
+{
+	if (m_keyboardState[DIK_DOWNARROW]&0x80)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool InputClass::IsMoveForward()
+{
+	if (m_keyboardState[DIK_W]&0x80)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool InputClass::IsMoveBack()
+{
+	if (m_keyboardState[DIK_S]&0x80)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool InputClass::IsMoveLeft()
+{
+	if (m_keyboardState[DIK_A]&0x80)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool InputClass::IsMoveRight()
+{
+	if (m_keyboardState[DIK_D]&0x80)
+	{
+		return true;
+	}
+	return false;
+}
+
 void InputClass::GetMouseLocation(int& mouseX, int& mouseY)
 {
 	mouseX = m_mouseX;
@@ -211,3 +265,5 @@ void InputClass::GetMouseLocation(int& mouseX, int& mouseY)
 
 	return;
 }
+
+

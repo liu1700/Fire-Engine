@@ -36,9 +36,9 @@ void TextureShaderClass::ShutDown()
 }
 
 bool TextureShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCount, D3DXMATRIX worldMatrix, D3DXMATRIX viewMatrix, 
-								D3DXMATRIX projectionMatrix, ID3D11ShaderResourceView* texture)
+								D3DXMATRIX projectionMatrix, ID3D11ShaderResourceView** textureArray)
 {
-	if(!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, &texture, 1))
+	if(!SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, textureArray, 1))
 		return false;
 
 	RenderShader(deviceContext, indexCount);

@@ -169,6 +169,14 @@
 			Name="Shader"
 			>
 			<File
+				RelativePath=".\Alphamap.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\Alphamap.vs"
+				>
+			</File>
+			<File
 				RelativePath=".\Light.ps"
 				>
 			</File>
@@ -256,6 +264,14 @@
 				Name="ShaderClasses"
 				>
 				<File
+					RelativePath=".\alphamapshaderclass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\alphamapshaderclass.h"
+					>
+				</File>
+				<File
 					RelativePath=".\lightshaderclass.cpp"
 					>
 				</File>
@@ -325,6 +341,14 @@
 				</File>
 				<File
 					RelativePath=".\cameraclass.h"
+					>
+				</File>
+				<File
+					RelativePath=".\positionclass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\positionclass.h"
 					>
 				</File>
 			</Filter>
@@ -397,14 +421,6 @@
 		</File>
 		<File
 			RelativePath=".\inputclass.h"
-			>
-		</File>
-		<File
-			RelativePath=".\positionclass.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\positionclass.h"
 			>
 		</File>
 		<File

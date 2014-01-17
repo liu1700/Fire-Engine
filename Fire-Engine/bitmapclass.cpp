@@ -6,9 +6,7 @@
 
 BitmapClass::BitmapClass()
 {
-	m_vertexBuffer = NULL;
-	m_indexBuffer = NULL;
-	m_TextureArray = NULL;
+
 }
 
 BitmapClass::BitmapClass(const BitmapClass& other)
@@ -21,7 +19,7 @@ BitmapClass::~BitmapClass()
 
 }
 
-bool BitmapClass::Initialze(ID3D11Device* device, int screenWidth, int screenHeight, WCHAR* textureFilename, int bitmapWidth, int bitmapHeight)
+bool BitmapClass::Initialze(ID3D11Device* device, int screenWidth, int screenHeight, WCHAR* textureFilename1, WCHAR* textureFilename2, WCHAR* textureFilename3,int bitmapWidth, int bitmapHeight)
 {
 	m_screenWidth = screenWidth;
 	m_screenHeight = screenHeight;
@@ -32,10 +30,14 @@ bool BitmapClass::Initialze(ID3D11Device* device, int screenWidth, int screenHei
 	m_previousPosX = -1;
 	m_previousPosY = -1;
 
+	// 设置顶点个数
+	m_vertexCount = 6;
+	m_indexCount = m_vertexCount;
+
 	if(!InitialzeBuffers(device))
 		return false;
 
-	if(!LoadTexture(device, textureFilename))
+	if(!LoadTexture(device, textureFilename1, textureFilename2, textureFilename3))
 		return false;
 
 	return true;
@@ -60,27 +62,12 @@ bool BitmapClass::Render(ID3D11DeviceContext* deviceContext, int positionX, int 
 	return true;
 }
 
-int BitmapClass::GetIndexCount()
-{
-	// 返回索引个数，提供给shader
-	return m_indexCount;
-}
-
-ID3D11ShaderResourceView** BitmapClass::GetTexture()
-{
-	return m_TextureArray->GetTextureArray();
-}
-
 bool BitmapClass::InitialzeBuffers(ID3D11Device* device)
 {
 	VertexType* vertices;
 	unsigned long* indices;
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
-
-	////  两个数组分别设定三个顶点与三个索引
-	m_vertexCount = 6;
-	m_indexCount = m_vertexCount;
 
 	vertices = new VertexType[m_vertexCount];
 	indices = new unsigned long[m_indexCount];
@@ -137,22 +124,6 @@ bool BitmapClass::InitialzeBuffers(ID3D11Device* device)
 	indices = NULL;
 
 	return true;
-}
-
-void BitmapClass::ShutdownBuffers()
-{
-	if (m_indexBuffer)
-	{
-		m_indexBuffer->Release();
-		m_indexBuffer = NULL;
-	}
-	if (m_vertexBuffer)
-	{
-		m_vertexBuffer->Release();
-		m_vertexBuffer = NULL;
-	}
-
-	return;
 }
 
 bool BitmapClass::UpdateBuffer(ID3D11DeviceContext* deviceContext, int positionX, int positionY)
@@ -217,46 +188,14 @@ bool BitmapClass::UpdateBuffer(ID3D11DeviceContext* deviceContext, int positionX
 	return true;
 }
 
-void BitmapClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
+bool BitmapClass::LoadTexture(ID3D11Device* device, WCHAR* filename1, WCHAR* filename2, WCHAR* filename3)
 {
-	unsigned int stride;
-	unsigned int offset;
-
-	// 设定顶点缓冲的步进值与偏移量
-	stride = sizeof(VertexType);
-	offset = 0;
-
-	// 激活顶点缓存
-	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-
-	// 激活索引缓存
-	deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-	// 设定这种顶点缓存所绘制的图元
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	return;
-}
-
-bool BitmapClass::LoadTexture(ID3D11Device* device, WCHAR* filename)
-{
-	m_TextureArray = new TextureClass;
+	m_TextureArray = new TextureArrayClass;
 	if(!m_TextureArray)
 		return false;
 
-	if(!m_TextureArray->Initialze(device, filename))
+	if(!m_TextureArray->Initialze(device, filename1, filename2, filename3))
 		return false;
 
 	return true;
-}
-
-void BitmapClass::ReleaseTexture()
-{
-	if (m_TextureArray)
-	{
-		m_TextureArray->ShutDown();
-		delete m_TextureArray;
-		m_TextureArray = NULL;
-	}
-	return;
 }

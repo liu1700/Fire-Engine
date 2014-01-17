@@ -1,9 +1,9 @@
 
 //////////////////////////////////////////////////////////
-//文件名: textureshaderclass.h		日期: 创建于:2014/1/12
+//文件名: alphamapshaderclass.h		日期: 创建于:2014/1/17
 //////////////////////////////////////////////////////////
-#ifndef _TEXTURESHADERCLASS_H_
-#define _TEXTURESHADERCLASS_H_
+#ifndef _ALPHAMAPSHADERCLASS_H_
+#define _ALPHAMAPSHADERCLASS_H_
 
 //////////////
 // FE CLASS INCLUDES //
@@ -11,14 +11,14 @@
 #include "shaderClass.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// 类名: TextureShaderClass
+// 类名: AlphaMapShaderClass
 ////////////////////////////////////////////////////////////////////////////////
-class TextureShaderClass : public ShaderClass
+class AlphaMapShaderClass : public ShaderClass
 {
 public:
-	TextureShaderClass();
-	TextureShaderClass(const TextureShaderClass&);
-	~TextureShaderClass();
+	AlphaMapShaderClass();
+	AlphaMapShaderClass(const AlphaMapShaderClass&);
+	~AlphaMapShaderClass();
 
 	bool Initialize(ID3D11Device*, HWND);
 	void ShutDown();

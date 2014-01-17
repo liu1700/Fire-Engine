@@ -13,7 +13,7 @@
 ////////////////////////////////////
 //¿‡√˚: ModelClass
 ////////////////////////////////////
-class ModelClass
+class ModelClass : public TectureRenderClass
 {
 public:
 	ModelClass();
@@ -23,10 +23,6 @@ public:
 	bool Initialze(ID3D11Device*,WCHAR*,WCHAR*,WCHAR*);
 	void ShutDown();
 	void Render(ID3D11DeviceContext*);
-
-	int GetIndexCount();
-
-	ID3D11ShaderResourceView** GetTextureArray();
 
 private:
 	struct VertexType
@@ -39,17 +35,11 @@ private:
 private:
 	bool InitialzeBuffers(ID3D11Device*);
 	void ShutdownBuffers();
-	void RenderBuffers(ID3D11DeviceContext*);
 
 	bool LoadTexture(ID3D11Device*, WCHAR*, WCHAR*);
-	void ReleaseTexture();
 
 private:
-	ID3D11Buffer *m_vertexBuffer, *m_indexBuffer;
-	int m_vertexCount, m_indexCount;
 	float** m_ModelInfo;
-
-	TextureArrayClass* m_TextureArray;
 	FileIOClass* m_inModel;
 };
 

@@ -6,9 +6,6 @@
 
 ModelClass::ModelClass()
 {
-	m_vertexBuffer = NULL;
-	m_indexBuffer = NULL;
-	m_TextureArray = NULL;
 	m_inModel = NULL;
 	m_ModelInfo = NULL;
 }
@@ -57,17 +54,6 @@ void ModelClass::Render(ID3D11DeviceContext* deviceContext)
 	return;
 }
 
-int ModelClass::GetIndexCount()
-{
-	// 返回索引个数，提供给shader
-	return m_indexCount;
-}
-
-ID3D11ShaderResourceView** ModelClass::GetTextureArray()
-{
-	return m_TextureArray->GetTextureArray();
-}
-
 bool ModelClass::InitialzeBuffers(ID3D11Device* device)
 {
 	VertexType* vertices;
@@ -75,9 +61,7 @@ bool ModelClass::InitialzeBuffers(ID3D11Device* device)
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 
-	////  两个数组分别设定三个顶点与三个索引
-	//m_vertexCount = 6;
-	//m_indexCount = 6;
+	//  两个数组分别设定三个顶点与三个索引
 
 	vertices = new VertexType[m_vertexCount];
 	indices = new unsigned long[m_indexCount];
@@ -165,27 +149,6 @@ void ModelClass::ShutdownBuffers()
 	return;
 }
 
-void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
-{
-	unsigned int stride;
-	unsigned int offset;
-
-	// 设定顶点缓冲的步进值与偏移量
-	stride = sizeof(VertexType);
-	offset = 0;
-
-	// 激活顶点缓存
-	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-
-	// 激活索引缓存
-	deviceContext->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-
-	// 设定这种顶点缓存所绘制的图元
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	return;
-}
-
 bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename1, WCHAR* filename2)
 {
 	m_TextureArray = new TextureArrayClass;
@@ -196,15 +159,4 @@ bool ModelClass::LoadTexture(ID3D11Device* device, WCHAR* filename1, WCHAR* file
 		return false;
 
 	return true;
-}
-
-void ModelClass::ReleaseTexture()
-{
-	if (m_TextureArray)
-	{
-		m_TextureArray->ShutDown();
-		delete m_TextureArray;
-		m_TextureArray = NULL;
-	}
-	return;
 }
