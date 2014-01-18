@@ -10,3 +10,6 @@ error X3501: 'M': entrypoint not found
 error X3501: 'M': entrypoint not found
 
 
+error X3501: 'BumpMapPixelShader': entrypoint not found
+
+

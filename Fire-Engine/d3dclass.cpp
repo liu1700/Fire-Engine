@@ -176,7 +176,7 @@ bool D3DClass::Initialze(int screenWidth, int screenHeight, bool vsync, HWND hwn
 	featureLevel = D3D_FEATURE_LEVEL_11_0;
 
 	// 创建交换链，D3D device和D3Ddevice上下文
-	if(FAILED(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &featureLevel, 1, D3D11_SDK_VERSION,
+	if(FAILED(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_DEBUG, &featureLevel, 1, D3D11_SDK_VERSION,
 		&swapChainDesc, &m_swapChain, &m_device, NULL, &m_deviceContext)))
 		return false;
 

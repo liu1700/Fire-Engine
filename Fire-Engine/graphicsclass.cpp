@@ -18,6 +18,7 @@ GraphicsClass::GraphicsClass()
 	m_Frustum = NULL;
 	m_MultiTextureShader = NULL;
 	m_AlphaMapShader = NULL;
+	m_BumpMapShader = NULL;
 }
 
 GraphicsClass::GraphicsClass(const GraphicsClass& other)
@@ -113,6 +114,17 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// 创建并初始化BumpMapShader对象
+	m_BumpMapShader = new BumpMapShaderClass;
+	if(!m_BumpMapShader)
+		return false;
+
+	if (!m_BumpMapShader->Initialize(m_D3D->GetDevice(), hwnd))
+	{
+		MessageBox(hwnd, L"初始化BumpMapShader对象错误", L"Error", MB_OK);
+		return false;
+	}
+
 	// 创建2D图像对象
 	m_Bitmap = new BitmapClass;
 	if(!m_Bitmap)
@@ -132,8 +144,8 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 
 	// 初始化model对象
-	if(!m_Model->Initialze(m_D3D->GetDevice(), L"../Fire-Engine/Models/Cube.txt", L"../Fire-Engine/Textures/stone01.dds", 
-		L"../Fire-Engine/Textures/dirt01.dds"))
+	if(!m_Model->Initialize(m_D3D->GetDevice(), "../Fire-Engine/Models/Cube.txt", L"../Fire-Engine/Textures/stone01.dds", 
+		L"../Fire-Engine/Textures/bump01.dds"))
 	{
 		MessageBox(hwnd, L"无法初始化model",L"Error", MB_OK);
 		return false;
@@ -162,17 +174,24 @@ bool GraphicsClass::Initialze(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 
 	// 初始化光照对象
-	m_Light->SetAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
+	//m_Light->SetAmbientColor(0.2f, 0.2f, 0.2f, 1.0f);
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetDirection(1.0f, 0.0f, 1.0f);
-	m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetSpecularPower(32.0f);
+	m_Light->SetDirection(0.0f, 0.0f, 1.0f);
+	//m_Light->SetSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
+	//m_Light->SetSpecularPower(32.0f);
 
 	return true;
 }
 
 void GraphicsClass::ShutDown()
 {
+	if (m_BumpMapShader)
+	{
+		m_BumpMapShader->Shutdown();
+		delete m_BumpMapShader;
+		m_BumpMapShader = NULL;
+	}
+
 	if (m_AlphaMapShader)
 	{
 		m_AlphaMapShader->ShutDown();
@@ -242,7 +261,7 @@ void GraphicsClass::ShutDown()
 
 	if (m_Model)
 	{
-		m_Model->ShutDown();
+		m_Model->Shutdown();
 		delete m_Model;
 		m_Model = NULL;
 	}
@@ -296,7 +315,7 @@ bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float fram
 	bool renderModel;
 
 	// BackBuffer清除为灰色
-	m_D3D->BeginScene(0.7f, 0.7f, 0.7f, 1.0f);
+	m_D3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// 基于Camera位置算出ViewMatrix
 	m_Camera->Render();
@@ -329,21 +348,15 @@ bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float fram
 		// 是否开始渲染
 		if(renderModel = false)
 		{
+
 			// 将模型移动至相应位置
 			D3DXMatrixTranslation(&worldMatrix, positionX, positionY, positionZ); 
 
 			// 将model的vertex与index buffer 放到图形绘制管线上
 			m_Model->Render(m_D3D->GetDeviceContext());
 
-			//// 利用shader渲染model
-			//if(!m_LightShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(),
-			//	worldMatrix, viewMatrix, projectionMatrix, m_Bitmap->GetTextureArray(), m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-			//	m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower()))
-			//	return false;
-
-			if(!m_MultiTextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
-				m_Model->GetTextureArray()))
-				return false;
+			m_BumpMapShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+				m_Model->GetTextureArray(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
 
 			// 重新设定至世界矩阵
 			m_D3D->GetWorldMatrix(worldMatrix);
@@ -357,15 +370,10 @@ bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float fram
 	// 将model的vertex与index buffer 放到图形绘制管线上
 	m_Model->Render(m_D3D->GetDeviceContext());
 
-	if(!m_MultiTextureShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
-		m_Model->GetTextureArray()))
-		return false;
-
-	// 关闭Z buffer
-	m_D3D->TurnZBufferOff();
+	m_BumpMapShader->Render(m_D3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix,
+		m_Model->GetTextureArray(), m_Light->GetDirection(), m_Light->GetDiffuseColor());
 
 	// 渲染text
-	//m_Text->Render(m_D3D->GetDeviceContext(), L"OK", 200, 400);
 	m_Text->SetMousePosition(mouseX, mouseY, m_D3D->GetDeviceContext());
 	m_Text->SetFps(fps, m_D3D->GetDeviceContext());
 	m_Text->SetCpu(cpu, m_D3D->GetDeviceContext());
@@ -380,9 +388,6 @@ bool GraphicsClass::Render( int mouseX, int mouseY, int fps, int cpu, float fram
 	if(!m_AlphaMapShader->Render(m_D3D->GetDeviceContext(), m_Bitmap->GetIndexCount(), 
 		worldMatrix, viewMatrix, orthoMatrix, m_Bitmap->GetTextureArray()))
 		return false;
-
-	// 开启Z buffer
-	m_D3D->TurnZBufferOn();
 
 	// 呈现
 	m_D3D->EndScene();
