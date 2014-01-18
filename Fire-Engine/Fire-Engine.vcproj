@@ -177,6 +177,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Bumpmap.ps"
+				>
+			</File>
+			<File
+				RelativePath=".\Bumpmap.vs"
+				>
+			</File>
+			<File
 				RelativePath=".\Light.ps"
 				>
 			</File>
@@ -269,6 +277,14 @@
 				</File>
 				<File
 					RelativePath=".\alphamapshaderclass.h"
+					>
+				</File>
+				<File
+					RelativePath=".\bumpmapshaderclass.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\bumpmapshaderclass.h"
 					>
 				</File>
 				<File
