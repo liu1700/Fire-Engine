@@ -49,4 +49,4 @@ Just want to create a game engine of my own, that's all
   I think, I need to stop adding anything new. I should stop and regroup my projects. Everyday I learn somrthing new and add it into my project. It's simple at the beginning but now it's different. It's becoming uncontrollable for me. Maybe I need to learn something about the Design of software project.
 
 2014/3/6:
-  I'm learning how to use Git
+  I'm learning how to use Git. Now, I know
